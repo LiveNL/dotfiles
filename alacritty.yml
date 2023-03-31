@@ -1,0 +1,142 @@
+# Alacritty config
+# based on: https://github.com/smallwat3r/dotfiles/blob/master/alacritty/.config/alacritty/alacritty.yml
+
+# ENV
+env:
+  TERM: alacritty # screen-256color
+
+# WINDOW
+window:
+  dimensions:
+    columns: 140
+    lines: 40
+
+  padding:
+    x: 0
+    y: 0
+
+  dynamic_padding: false
+
+  # Startup Mode (changes require restart)
+  #
+  # Values for `startup_mode`:
+  #   - Windowed
+  #   - Maximized
+  #   - Fullscreen
+  #
+  # Values for `startup_mode` (macOS only):
+  #   - SimpleFullscreen
+  startup_mode: Windowed
+
+  # Available values:
+  # - full: borders and title bar
+  # - none: neither borders nor title bar
+  # - transparent: title bar, transparent background and title bar buttons
+  # - buttonless: title bar, transparent background, but no title bar buttons
+  decorations: full
+
+scrolling:
+  history: 10000
+  multiplier: 3
+  scrolling_multiplier: 3
+
+# FONTS
+# https://sourcefoundry.org/hack/playground.html
+# Use: https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts
+# to have proper graphical advances everywhere (ligiatures)
+font:
+  normal:
+    family: LiterationMono Nerd Font
+    style: Book
+
+  size: 9
+
+  offset:
+    x: 0
+    y: 0
+
+  glyph_offset:
+    x: 0
+    y:
+      0
+
+      # use_thin_strokes: true -> REPLACED BY:
+      #  defaults write -g AppleFontSmoothing -int 0
+
+# Nightfox Alacritty Colors
+# Style: terafox
+# Upstream: https://github.com/edeneast/nightfox.nvim/raw/main/extra/terafox/nightfox_alacritty.yml
+colors:
+  # Default colors
+  primary:
+    background: "0x152528"
+    foreground: "0xe6eaea"
+  # Normal colors
+  normal:
+    black: "0x2f3239"
+    red: "0xe85c51"
+    green: "0x7aa4a1"
+    yellow: "0xfda47f"
+    blue: "0x5a93aa"
+    magenta: "0xad5c7c"
+    cyan: "0xa1cdd8"
+    white: "0xebebeb"
+  # Bright colors
+  bright:
+    black: "0x4e5157"
+    red: "0xeb746b"
+    green: "0x8eb2af"
+    yellow: "0xfdb292"
+    blue: "0x73a3b7"
+    magenta: "0xb97490"
+    cyan: "0xafd4de"
+    white: "0xeeeeee"
+  indexed_colors:
+    - { index: 16, color: "0xff8349" }
+    - { index: 17, color: "0xcb7985" }
+
+# MOUSE
+mouse_bindings:
+  - { mouse: Middle, action: PasteSelection }
+
+mouse:
+  double_click: { threshold: 300 }
+  triple_click: { threshold: 300 }
+
+  hide_when_typing: true
+
+  # url:
+  hints:
+    launcher:
+      program: open
+      args: []
+
+selection:
+  semantic_escape_chars: ",│`|:''' ()[]{}<>"
+  save_to_clipboard: true
+
+dynamic_title: true
+
+cursor:
+  style: Block
+  vi_mode_style: Beam
+  unfocused_hollow: true
+
+# OTHER
+live_config_reload: true
+enable_experimental_conpty_backend: false
+
+alt_send_esc: true
+
+visual_bell:
+  animation: EaseOutExpo
+  duration: 0
+  color: "#ffffff"
+
+debug:
+  render_timer: false
+  persistent_logging: false
+  log_level: Warn
+  print_events: false
+  ref_test: false
+# KEYS
