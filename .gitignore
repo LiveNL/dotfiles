@@ -12,8 +12,8 @@ log/appsignal.log
 /.yarn.lock
 /.yarnclean
 .pry_history
+.gitconfig
 
 .DS_Store
-.config/coc
 .pyre/
 */**/.pyre/
