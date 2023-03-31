@@ -1,0 +1,15 @@
+.DS_Store
+dump.rdb
+/.bundle/
+/.yardoc
+/Gemfile.lock
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+/log/
+/.yarn.lock
+/.yarnclean
+tags
