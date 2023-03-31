@@ -13,7 +13,7 @@ log/appsignal.log
 /.yarnclean
 .pry_history
 .gitconfig
-
+packer_compiled.lua
 .DS_Store
 .pyre/
 */**/.pyre/
