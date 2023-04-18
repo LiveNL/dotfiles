@@ -39,6 +39,7 @@ null_ls.setup({
 		formatting.isort.with({ extra_args = { "--use-parentheses", "--profile", "black", filetypes = { "python" } } }),
 		diagnostics.flake8,
 		diagnostics.eslint,
+		diagnostics.xo,
 		diagnostics.write_good.with({ filetypes = { "markdown", "text" } }),
 		formatting.autoflake.with({ extra_args = { "--remove-all-unused-imports", "--remove-unused-variables" } }),
 		formatting.black.with({ extra_args = { "-l", "80", "--fast" } }),
@@ -56,6 +57,7 @@ null_ls.setup({
 		code_actions.shellcheck,
 		code_actions.gitsigns,
 		code_actions.refactoring,
+		code_actions.xo,
 		-- completion.spell,
 		diagnostics.eslint_d.with({
 			diagnostics_format = "[eslint] #{m}\n(#{c})",
