@@ -53,6 +53,14 @@ packer.startup(function()
 	--[[ ----------- LANGUAGE & COMPLETION ----------- ]]
 	-- Treesitter (language parsing & highlights)
 	use({
+		"lukas-reineke/headlines.nvim",
+		after = "nvim-treesitter",
+		config = function()
+			require("headlines").setup()
+		end,
+	})
+
+	use({
 		"nvim-treesitter/nvim-treesitter",
 		run = ":TSUpdate",
 	})
