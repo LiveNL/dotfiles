@@ -22,6 +22,7 @@ alias ndiff='nvim -u None -d'
 alias co="git checkout"
 alias gb="git branch --sort committerdate | tail"
 alias curl='noglob curl'
+alias project_lines='git ls-files | xargs wc -l'
 
 # requires pip install git+https://github.com/jeffkaufman/icdiff.git
 alias gdiff='git difftool --extcmd icdiff -y'
