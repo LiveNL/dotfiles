@@ -100,6 +100,8 @@ packer.startup(function()
 		run = ":TSUpdate",
 	})
 
+	use("nvim-treesitter/nvim-treesitter-context")
+
 	use({
 		"zbirenbaum/copilot.lua",
 		config = function()
