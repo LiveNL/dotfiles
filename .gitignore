@@ -18,3 +18,4 @@ packer_compiled.lua
 .pyre/
 */**/.pyre/
 .config/karabiner/automatic_backups/
+.config/github-copilot/hosts.json
