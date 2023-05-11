@@ -1,7 +1,7 @@
 -- All language servers:
 -- https://github.com/neovim/nvim-lspconfig
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
-
+--
 local lsp = require("lspconfig")
 local configs = require("lspconfig/configs")
 local util = require("lspconfig/util")
@@ -18,6 +18,24 @@ lsp_zero.setup()
 lsp["pyright"].setup({})
 lsp["pyre"].setup({})
 lsp["svelte"].setup({})
+
+-- https://github.com/VonHeikemen/lsp-zero.nvim/blob/v2.x/doc/md/guides/setup-copilot-lua-plus-nvim-cmp.md#setup-copilotlua--nvim-cmp
+local cmp = require("cmp")
+
+cmp.setup({
+	sources = {
+		{ name = "copilot" },
+		{ name = "nvim_lsp" },
+	},
+	mapping = {
+		["<CR>"] = cmp.mapping.confirm({
+			-- documentation says this is important.
+			-- I don't know why.
+			behavior = cmp.ConfirmBehavior.Replace,
+			select = false,
+		}),
+	},
+})
 
 lsp.eslint.setup({
 	on_attach = function(client, bufnr)
