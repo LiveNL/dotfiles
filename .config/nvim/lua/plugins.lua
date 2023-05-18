@@ -120,6 +120,8 @@ packer.startup(function()
 		end,
 	})
 
+	use("onsails/lspkind.nvim")
+
 	-- -- Quickstart configs for Nvim LSP
 	-- -- use 'neovim/nvim-lspconfig'
 	-- :LspInfo

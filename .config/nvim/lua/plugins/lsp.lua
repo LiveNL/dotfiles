@@ -22,6 +22,16 @@ lsp["svelte"].setup({})
 -- https://github.com/VonHeikemen/lsp-zero.nvim/blob/v2.x/doc/md/guides/setup-copilot-lua-plus-nvim-cmp.md#setup-copilotlua--nvim-cmp
 local cmp = require("cmp")
 
+local has_words_before = function()
+	if vim.api.nvim_buf_get_option(0, "buftype") == "prompt" then
+		return false
+	end
+	local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+	return col ~= 0 and vim.api.nvim_buf_get_text(0, line - 1, 0, line - 1, col, {})[1]:match("^%s*$") == nil
+end
+
+local lspkind = require("lspkind")
+
 cmp.setup({
 	sources = {
 		{ name = "copilot" },
@@ -33,6 +43,28 @@ cmp.setup({
 			-- I don't know why.
 			behavior = cmp.ConfirmBehavior.Replace,
 			select = false,
+		}),
+		["<Tab>"] = vim.schedule_wrap(function(fallback)
+			if cmp.visible() and has_words_before() then
+				cmp.select_next_item({ behavior = cmp.SelectBehavior.Select })
+			else
+				fallback()
+			end
+		end),
+	},
+	formatting = {
+		format = lspkind.cmp_format({
+			mode = "symbol_text",
+			maxwidth = 50, -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
+			ellipsis_char = "...", -- when popup menu exceed maxwidth, the truncated part would show ellipsis_char instead (must define maxwidth first)
+			symbol_map = { Copilot = "" },
+
+			-- The function below will be called before any actual modifications from lspkind
+			-- so that you can provide more controls on popup customization. (See [#30](https://github.com/onsails/lspkind-nvim/pull/30))
+			-- before = function (entry, vim_item)
+			--   ...
+			--   return vim_item
+			-- end
 		}),
 	},
 })
