@@ -36,6 +36,8 @@ cmp.setup({
 	sources = {
 		{ name = "copilot" },
 		{ name = "nvim_lsp" },
+		{ name = "path" },
+		{ name = "luasnip" },
 	},
 	mapping = {
 		["<CR>"] = cmp.mapping.confirm({
