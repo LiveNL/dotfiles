@@ -8,9 +8,6 @@ local vmap = vim.keymap.set
 -- command: the command you want the keypresses to execute.
 -- options: an optional Lua table of options to configure (e.g., silent or noremap).
 
--- remap the key used to leave insert mode
-map("i", "jk", "<ESC>", {})
-
 -- Toggle nvim-tree
 -- ctrl + n
 map("n", "<C-n>", [[:NvimTreeToggle<CR>]], {})
