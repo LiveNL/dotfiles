@@ -46,6 +46,7 @@ require("legendary").setup({
 		{ "K", "", description = "hover information about function like signature" },
 		{ "C-K", "", description = "hover information about function like signature" },
 		{ "gp", ":silent %!prettier --stdin-filepath %<CR>", description = "perttier" },
+		{ "<leader>t", "", description = "test class (vimtest)" },
 	},
 	-- Initial commands to bind
 	commands = {

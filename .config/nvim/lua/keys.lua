@@ -41,3 +41,5 @@ map("n", "-", "<C-w>-", {})
 
 map("n", "<leader>d", ':echom (strftime("%H:%M:%S"))<CR>', {})
 map("v", "<leader>k", ":!black -q -<CR>", {})
+
+map("n", "<leader>t", ":TestClass <cr>", {})
