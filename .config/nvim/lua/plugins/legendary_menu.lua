@@ -42,6 +42,8 @@ require("legendary").setup({
 		{ "gD", "", description = "go to declaration" },
 		{ "<leader>ca", "", description = "code action" },
 		{ "<leader>f", "", description = "format whole file" },
+		{ "<leader>fj", ":FormatJson", description = "Format (selected) json" },
+		{ "co", ":GitConflictChooseOurs", description = "git merge conflict, choose ours" },
 		{ "ff", "", description = "file search" },
 		{ "K", "", description = "hover information about function like signature" },
 		{ "C-K", "", description = "hover information about function like signature" },
