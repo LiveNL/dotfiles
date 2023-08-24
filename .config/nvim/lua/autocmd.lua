@@ -62,3 +62,14 @@ vim.api.nvim_exec(
 ]],
 	false
 )
+
+vim.api.nvim_create_augroup("diagnostics", { clear = true })
+
+-- Required to keep diagnostics alive appareantly (javascript)
+vim.api.nvim_create_autocmd("DiagnosticChanged", {
+	group = "diagnostics",
+	callback = function()
+		vim.diagnostic.setloclist({ open = false })
+		vim.diagnostic.enable(0)
+	end,
+})
