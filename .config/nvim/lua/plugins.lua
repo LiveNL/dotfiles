@@ -101,6 +101,7 @@ packer.startup(function()
 	})
 
 	use("nvim-treesitter/nvim-treesitter-context")
+	use("nvim-treesitter/playground")
 
 	use({
 		"zbirenbaum/copilot.lua",
