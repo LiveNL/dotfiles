@@ -33,13 +33,15 @@ null_ls.setup({
 					".eslintrc",
 					".eslintrc.js",
 					"tsl/frontend/.eslintrc.json",
+					"tsl/frontend/.xo-config.json",
 				})
 			end,
 		}),
 		formatting.isort.with({ extra_args = { "--use-parentheses", "--profile", "black", filetypes = { "python" } } }),
 		diagnostics.flake8,
-		diagnostics.eslint,
-		diagnostics.xo,
+		diagnostics.xo.with({
+      prefer_local = "node_modules/.bin",
+		}),
 		diagnostics.write_good.with({ filetypes = { "markdown", "text" } }),
 		formatting.autoflake.with({ extra_args = { "--remove-all-unused-imports", "--remove-unused-variables" } }),
 		formatting.black.with({ extra_args = { "-l", "80", "--fast" } }),
@@ -50,6 +52,7 @@ null_ls.setup({
 					".eslintrc",
 					".eslintrc.js",
 					"tsl/frontend/.eslintrc.json",
+					"tsl/frontend/.xo-config.json",
 				})
 			end,
 		}),
@@ -58,10 +61,11 @@ null_ls.setup({
 		code_actions.gitsigns,
 		code_actions.refactoring,
 		code_actions.xo,
-		-- completion.spell,
-		diagnostics.eslint_d.with({
-			diagnostics_format = "[eslint] #{m}\n(#{c})",
-		}),
+    -- disabled in favor of xo:
+    -- diagnostics.eslint,
+    -- diagnostics.eslint_d.with({
+    -- 	diagnostics_format = "[eslint] #{m}\n(#{c})",
+    -- }),
 	},
 	debug = false,
 	on_attach = function(client, bufnr)
