@@ -18,7 +18,8 @@ packer_compiled.lua
 .pyre/
 */**/.pyre/
 .config/karabiner/automatic_backups/
-.config/github-copilot/hosts.json
+.config/github-copilot/
+.config/op/
 .config/gem/
 .watchmanconfig
 .pyre_configuration
