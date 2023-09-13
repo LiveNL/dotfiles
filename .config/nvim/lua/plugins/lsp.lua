@@ -15,9 +15,18 @@ lsp_zero.preset("recommended")
 lsp_zero.nvim_workspace()
 lsp_zero.setup()
 
-lsp["pyright"].setup({})
-lsp["pyre"].setup({})
-lsp["svelte"].setup({})
+lsp.pyright.setup({})
+
+-- lsp.svelte.setup({
+--   root_dir = lsp.util.root_pattern("xo-config.json"),
+-- })
+-- Disable tsserver, if you have
+-- lspconfig.tsserver.setup { ... }
+
+lsp.svelte.setup({
+	-- Add filetypes for the server to run and share info between files
+	filetypes = { "typescript", "javascript", "svelte", "html", "css" },
+})
 
 -- https://github.com/VonHeikemen/lsp-zero.nvim/blob/v2.x/doc/md/guides/setup-copilot-lua-plus-nvim-cmp.md#setup-copilotlua--nvim-cmp
 local cmp = require("cmp")
@@ -71,14 +80,15 @@ cmp.setup({
 	},
 })
 
-lsp.eslint.setup({
-	on_attach = function(client, bufnr)
-		vim.api.nvim_create_autocmd("BufWritePre", {
-			buffer = bufnr,
-			command = "EslintFixAll",
-		})
-	end,
-})
+-- lsp.eslint.setup({
+-- AUTO FORMAT:
+-- on_attach = function(client, bufnr)
+-- 	vim.api.nvim_create_autocmd("BufWritePre", {
+-- 		buffer = bufnr,
+-- 		command = "EslintFixAll",
+-- 	})
+-- end,
+-- })
 
 -- Mappings.
 -- See `:help vim.diagnostic.*` for documentation on any of the below functions
@@ -95,6 +105,12 @@ vim.diagnostic.config({
 -- Show line diagnostics automatically in hover window
 vim.o.updatetime = 300
 vim.cmd([[autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})]])
+
+local signs = { Error = "E", Warn = "W", Hint = "H", Info = "I" }
+for type, icon in pairs(signs) do
+	local hl = "DiagnosticSign" .. type
+	vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+end
 
 -- Use an on_attach function to only map the following keys
 -- after the language server attaches to the current buffer
@@ -167,14 +183,6 @@ lsp.pyright.setup({
 })
 
 local root_pattern = require("lspconfig.util").root_pattern
-
-lsp.pyre.setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-	filetypes = { "python" },
-	cmd = { "pyre", "persistent" },
-	root_dir = root_pattern({ "." }),
-})
 
 -- https://www.flake8rules.com/rules/
 require("lspconfig").pylsp.setup({
