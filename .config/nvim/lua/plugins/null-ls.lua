@@ -41,6 +41,7 @@ null_ls.setup({
 		diagnostics.flake8,
 		diagnostics.xo.with({
       prefer_local = "node_modules/.bin",
+      extra_filetypes = { "svelte" },
 		}),
 		diagnostics.write_good.with({ filetypes = { "markdown", "text" } }),
 		formatting.autoflake.with({ extra_args = { "--remove-all-unused-imports", "--remove-unused-variables" } }),
