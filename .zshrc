@@ -23,6 +23,7 @@ alias co="git checkout"
 alias gb="git branch --sort committerdate | tail"
 alias curl='noglob curl'
 alias project_lines='git ls-files | xargs wc -l'
+alias wallpapers='open /Library/Application\ Support/com.apple.idleassetsd/Customer/4KSDR240FPS'
 
 # requires pip install git+https://github.com/jeffkaufman/icdiff.git
 alias gdiff='git difftool --extcmd icdiff -y'
