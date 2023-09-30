@@ -461,3 +461,5 @@ require("feline").setup({
 		},
 	},
 })
+
+vim.cmd("highlight @tag.attribute cterm=italic gui=italic guifg=bg guibg=#ff9664")
