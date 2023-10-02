@@ -14,6 +14,15 @@ eval `ssh-agent -s`
 fi
 
 # list aliasses
+diff_lists() {
+    if [ "$#" -ne 3 ]; then
+        echo "Usage: diff_lists <source_file> <exclude_file> <output_file>"
+        echo "Description: Extracts line-separated items from <source_file> that are not present in <exclude_file> and writes them to <output_file>."
+        return
+    fi
+    grep -Fvxf "$2" "$1" > "$3"
+}
+
 alias ll='ls -al'
 alias l='ls -l -a'
 alias ls="ls -G -F"
