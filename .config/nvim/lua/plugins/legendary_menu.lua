@@ -53,6 +53,26 @@ require("legendary").setup({
 	-- Initial commands to bind
 	commands = {
 		-- your command tables here
+		{
+			":FindDuplicates",
+			function()
+				local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+				local seen = {}
+				local duplicates = {}
+
+				for _, line in ipairs(lines) do
+					if seen[line] then
+						duplicates[line] = (duplicates[line] or 1) + 1
+					end
+					seen[line] = true
+				end
+
+				for line, count in pairs(duplicates) do
+					print(line .. " [" .. count .. " times]")
+				end
+			end,
+			description = "Finds duplicate lines within a file",
+		},
 	},
 	-- Initial augroups and autocmds to bind
 	autocmds = {
