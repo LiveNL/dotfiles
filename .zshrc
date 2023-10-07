@@ -2,6 +2,7 @@
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
+export N_PREFIX=/usr/local
 
 export PATH="$PATH:/usr/local/bin"
 
@@ -26,7 +27,7 @@ diff_lists() {
 alias ll='ls -al'
 alias l='ls -l -a'
 alias ls="ls -G -F"
-alias ag='Ag --width 100'
+alias ag='Ag --width 100 --hidden'
 alias ndiff='nvim -u None -d'
 alias co="git checkout"
 alias gb="git branch --sort committerdate | tail"
