@@ -32,16 +32,16 @@ null_ls.setup({
 					".eslintrc.json",
 					".eslintrc",
 					".eslintrc.js",
-					"tsl/frontend/.eslintrc.json",
-					"tsl/frontend/.xo-config.json",
+					"frontend/.eslintrc.json",
+					"frontend/.xo-config.json",
 				})
 			end,
 		}),
 		formatting.isort.with({ extra_args = { "--use-parentheses", "--profile", "black", filetypes = { "python" } } }),
 		diagnostics.flake8,
 		diagnostics.xo.with({
-      prefer_local = "node_modules/.bin",
-      extra_filetypes = { "svelte" },
+			prefer_local = "node_modules/.bin",
+			extra_filetypes = { "svelte" },
 		}),
 		diagnostics.write_good.with({ filetypes = { "markdown", "text" } }),
 		formatting.autoflake.with({ extra_args = { "--remove-all-unused-imports", "--remove-unused-variables" } }),
@@ -52,8 +52,8 @@ null_ls.setup({
 					".eslintrc.json",
 					".eslintrc",
 					".eslintrc.js",
-					"tsl/frontend/.eslintrc.json",
-					"tsl/frontend/.xo-config.json",
+					"frontend/.eslintrc.json",
+					"frontend/.xo-config.json",
 				})
 			end,
 		}),
@@ -62,11 +62,11 @@ null_ls.setup({
 		code_actions.gitsigns,
 		code_actions.refactoring,
 		code_actions.xo,
-    -- disabled in favor of xo:
-    -- diagnostics.eslint,
-    -- diagnostics.eslint_d.with({
-    -- 	diagnostics_format = "[eslint] #{m}\n(#{c})",
-    -- }),
+		-- disabled in favor of xo:
+		-- diagnostics.eslint,
+		-- diagnostics.eslint_d.with({
+		-- 	diagnostics_format = "[eslint] #{m}\n(#{c})",
+		-- }),
 	},
 	debug = false,
 	on_attach = function(client, bufnr)
