@@ -1,4 +1,11 @@
 return function()
+	-- https://github.com/jay-babu/mason-null-ls.nvim#primary-source-of-truth-is-null-ls
+	require("mason-null-ls").setup({
+		ensure_installed = nil,
+		automatic_installation = true,
+		automatic_setup = false,
+	})
+
 	local null_ls = require("null-ls")
 	local formatting = null_ls.builtins.formatting
 	local diagnostics = null_ls.builtins.diagnostics
@@ -35,15 +42,23 @@ return function()
 				end,
 			}),
 			formatting.isort.with({
-				extra_args = { "--use-parentheses", "--profile", "black", filetypes = { "python" } },
+				extra_args = { "--use-parentheses", "--profile", "black" },
+				filetypes = { "python" },
 			}),
+
 			diagnostics.flake8,
 			diagnostics.xo.with({
 				prefer_local = "node_modules/.bin",
 				extra_filetypes = { "svelte" },
 			}),
 			diagnostics.write_good.with({ filetypes = { "markdown", "text" } }),
-			formatting.autoflake.with({ extra_args = { "--remove-all-unused-imports", "--remove-unused-variables" } }),
+
+			formatting.autoflake.with({
+				extra_args = {
+					"--remove-all-unused-imports",
+					"--remove-unused-variables",
+				},
+			}),
 			formatting.black.with({ extra_args = { "-l", "80", "--fast" } }),
 			formatting.eslint_d.with({
 				condition = function(utils)
@@ -57,10 +72,12 @@ return function()
 				end,
 			}),
 			formatting.stylua,
+
 			code_actions.shellcheck,
 			code_actions.gitsigns,
 			code_actions.refactoring,
 			code_actions.xo,
+
 			-- disabled in favor of xo:
 			-- diagnostics.eslint,
 			-- diagnostics.eslint_d.with({
@@ -85,11 +102,4 @@ return function()
 	vim.api.nvim_create_user_command("DisableLspFormatting", function()
 		vim.api.nvim_clear_autocmds({ group = augroup, buffer = 0 })
 	end, { nargs = 0 })
-
-	-- https://github.com/jay-babu/mason-null-ls.nvim#primary-source-of-truth-is-null-ls
-	require("mason-null-ls").setup({
-		ensure_installed = nil,
-		automatic_installation = true,
-		automatic_setup = false,
-	})
 end
