@@ -1,10 +1,6 @@
 --[[ init.lua ]]
 
 local g = vim.g
-
--- LEADER
--- These keybindings need to be defined before the first /
--- is called; otherwise, it will default to "\"
 g.mapleader = ","
 g.localleader = "\\"
 g.t_co = 256
