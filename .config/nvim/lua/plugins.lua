@@ -14,6 +14,8 @@ vim.opt.rtp:prepend(lazypath)
 local lazy = require("lazy")
 
 lazy.setup({
+	checker = { enabled = true },
+
 	--[[ ----------- VISUALS ----------- ]]
 	-- Colorscheme
 	"nvim-tree/nvim-web-devicons",
