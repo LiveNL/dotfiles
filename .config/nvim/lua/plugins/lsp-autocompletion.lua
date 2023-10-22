@@ -5,7 +5,6 @@ return function()
 
 	-- And you can configure cmp even more, if you want to.
 	local cmp = require("cmp")
-	local cmp_action = lsp_zero.cmp_action()
 	local lspkind = require("lspkind")
 
 	local has_words_before = function()
