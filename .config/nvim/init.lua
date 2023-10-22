@@ -6,7 +6,6 @@ g.localleader = "\\"
 g.t_co = 256
 
 -- IMPORTS
-require("keys")
 require("opts")
 
 require("plugins")
@@ -19,5 +18,4 @@ require("plugins.vim-test")
 require("plugins.statusline")
 require("plugins.gitgutter")
 require("plugins.null-ls")
-require("plugins.legendary_menu")
 require("autocmd")

@@ -14,6 +14,8 @@ vim.opt.rtp:prepend(lazypath)
 local lazy = require("lazy")
 
 lazy.setup({
+	{ "LazyVim/LazyVim", version = false },
+
 	checker = { enabled = true },
 
 	--[[ ----------- VISUALS ----------- ]]
@@ -217,21 +219,8 @@ lazy.setup({
 	-- A minimal, stylish and customizable statusline for Neovim written in Lua
 	"feline-nvim/feline.nvim",
 
-	-- Keymaps custom menu:
-	-- https://github.com/folke/which-key.nvim
-	{
-		"folke/which-key.nvim",
-		config = function()
-			require("which-key").setup({
-				-- your configuration comes here
-				-- or leave it empty to use the default settings
-				-- refer to the configuration section below
-			})
-		end,
-	},
-
-	-- https://github.com/mrjones2014/legendary.nvim
-	"mrjones2014/legendary.nvim",
+	-- Custom keymaps + menu:
+	{ "folke/which-key.nvim", config = require("plugins.which-key") },
 
 	-- https://github.com/numToStr/Comment.nvim
 	{
