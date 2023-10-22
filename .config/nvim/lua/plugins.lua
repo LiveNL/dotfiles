@@ -18,9 +18,8 @@ lazy.setup({
 
 	checker = { enabled = true },
 
-	--[[ ----------- VISUALS ----------- ]]
-	-- Colorscheme
-	"nvim-tree/nvim-web-devicons",
+	-- "https://github.com/kyazdani43/nvim-web-devicons.git"
+	"kyazdani43/nvim-web-devicons",
 
 	{
 		"EdenEast/nightfox.nvim",
@@ -31,57 +30,26 @@ lazy.setup({
 		end,
 	},
 
-	"lewis6991/gitsigns.nvim",
+	-- Git integration for buffers
+	-- https://github.com/lewis6991/gitsigns.nvim
+	{ "lewis6991/gitsigns.nvim", config = require("plugins.gitsigns") },
 
-	--[[ ----------- LANGUAGE & COMPLETION ----------- ]]
-	-- Treesitter (language parsing & highlights)
+	-- This plugin adds horizontal highlights for text like markdown etc.
+	-- https://github.com/lukas-reineke/headlines.nvim
 	{
 		"lukas-reineke/headlines.nvim",
 		dependencies = "nvim-treesitter/nvim-treesitter",
 		ft = { "org", "norg", "markdown", "yaml" },
-		config = function()
-			require("headlines").setup({
-				markdown = {
-					query = vim.treesitter.query.parse(
-						"markdown",
-						[[
-                  (atx_heading [
-                      (atx_h1_marker)
-                      (atx_h2_marker)
-                      (atx_h3_marker)
-                      (atx_h4_marker)
-                      (atx_h5_marker)
-                      (atx_h6_marker)
-                  ] @headline)
-
-                  (thematic_break) @dash
-
-                  (fenced_code_block) @codeblock
-
-                  (block_quote_marker) @quote
-                  (block_quote (paragraph (inline (block_continuation) @quote)))
-              ]]
-					),
-					headline_highlights = { "Headline" },
-					codeblock_highlight = "CodeBlock",
-					dash_highlight = "Dash",
-					dash_string = "-",
-					quote_highlight = "Quote",
-					quote_string = "┃",
-					fat_headlines = true,
-					fat_headline_upper_string = "▃",
-					fat_headline_lower_string = "🬂",
-					----------
-					-- code_fence_content = "CodeBlock",
-					-- fenced_code_block_delimiter = "CodeBlock",
-				},
-			})
-		end,
+		config = require("plugins.headlines"),
 	},
 
+	-- Nvim Treesitter configurations and abstraction layer
+	-- https://github.com/nvim-treesitter/nvim-treesitter
 	{
+
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate",
+		config = require("plugins.treesitter"),
 	},
 
 	"nvim-treesitter/nvim-treesitter-context",
@@ -105,69 +73,89 @@ lazy.setup({
 		},
 	},
 
+	-- This tiny plugin adds vscode-like pictograms to neovim built-in lsp:
+	-- https://github.com/onsails/lspkind.nvim
 	"onsails/lspkind.nvim",
 
-	-- -- Quickstart configs for Nvim LSP
-	-- -- use 'neovim/nvim-lspconfig'
-	-- :LspInfo
-	-- :LspRestart (find new files, imports etc.)
+	-- A starting point to setup some lsp related features in neovim.
+	-- https://github.com/VonHeikemen/lsp-zero.nvim/blob/v3.x/doc/md/guides/lazy-loading-with-lazy-nvim.md
 	{
 		"VonHeikemen/lsp-zero.nvim",
-		branch = "v1.x",
-		dependencies = {
-			-- LSP Support
-			{ "neovim/nvim-lspconfig" }, -- Required
-			{ "williamboman/mason.nvim" }, -- Optional
-			{ "williamboman/mason-lspconfig.nvim" }, -- Optional
+		branch = "v3.x",
+		lazy = true,
+		config = false,
+		init = function()
+			-- Disable automatic setup, we are doing it manually
+			vim.g.lsp_zero_extend_cmp = 0
+			vim.g.lsp_zero_extend_lspconfig = 0
+		end,
+	},
+	{
+		"williamboman/mason.nvim",
+		lazy = false,
+		config = true,
+	},
 
-			-- Autocompletion
-			{ "hrsh7th/nvim-cmp" }, -- Required
-			{ "hrsh7th/cmp-nvim-lsp" }, -- Required
+	-- Autocompletion
+	{
+		"hrsh7th/nvim-cmp",
+		event = "InsertEnter",
+		dependencies = {
+			{ "L3MON4D3/LuaSnip" },
+			{ "rafamadriz/friendly-snippets" }, -- Optional
 			{ "hrsh7th/cmp-buffer" }, -- Optional
 			{ "hrsh7th/cmp-path" }, -- Optional
-			{ "saadparwaiz1/cmp_luasnip" }, -- Optional
 			{ "hrsh7th/cmp-nvim-lua" }, -- Optional
-
-			-- Snippets
-			{ "L3MON4D3/LuaSnip" }, -- Required
-			{ "rafamadriz/friendly-snippets" }, -- Optional
 		},
+		config = require("plugins.lsp-autocompletion"),
+	},
+
+	-- LSP
+	{
+		"neovim/nvim-lspconfig",
+		cmd = { "LspInfo", "LspInstall", "LspStart" },
+		event = { "BufReadPre", "BufNewFile" },
+		dependencies = {
+			{ "hrsh7th/cmp-nvim-lsp" },
+			{ "williamboman/mason-lspconfig.nvim" },
+		},
+		config = require("plugins.lsp"),
 	},
 
 	-- show lsp status
-	"j-hui/fidget.nvim",
+	-- https://github.com/j-hui/fidget.nvim
+	{ "j-hui/fidget.nvim", tag = "legacy", event = "LspAttach", opts = {} },
 
 	-- show function signature
-	"ray-x/lsp_signature.nvim",
-
-	-- https://github.com/jose-elias-alvarez/null-ls.nvim
-	-- also responsible for diagnostics
-	-- lua vim.diagnostic.setqflist()
+	-- https://github.com/ray-x/lsp_signature.nvim
 	{
-		"jose-elias-alvarez/null-ls.nvim",
+		"ray-x/lsp_signature.nvim",
+		event = "VeryLazy",
+		opts = {},
+		config = function(_, opts)
+			require("lsp_signature").setup(opts)
+		end,
+	},
+
+	-- null-ls.nvim Reloaded, maintained by the community.
+	-- https://github.com/nvimtools/none-ls.nvim
+	{
+		"nvimtools/none-ls.nvim",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			"neovim/nvim-lspconfig",
 		},
+		config = require("plugins.null-ls"),
 	},
 
-	{
-		"jay-babu/mason-null-ls.nvim",
-	},
+	-- mason-null-ls bridges mason.nvim with the null-ls plugin -
+	-- making it easier to use both plugins together.
+	-- https://github.com/jay-babu/mason-null-ls.nvim
+	{ "jay-babu/mason-null-ls.nvim" },
 
-	{
-		"windwp/nvim-autopairs",
-		config = function()
-			require("nvim-autopairs").setup({})
-		end,
-	},
-
-	--[[ ----------- TESTING ----------- ]]
-	-- Start tests from within neovim (vimscript)
-	"vim-test/vim-test",
-
-	-- Floating window used for vim-test
-	"voldikss/vim-floaterm",
+	-- autopairs for neovim written by lua
+	-- https://github.com/windwp/nvim-autopairs
+	{ "windwp/nvim-autopairs", event = "InsertEnter", opts = {} },
 
 	-- Displays coverage information in the sign column.
 	-- https://github.com/andythigpen/nvim-coverage
@@ -205,6 +193,7 @@ lazy.setup({
 			"elihunter173/dirbuf.nvim",
 		},
 		tag = "nightly", -- optional, updated every week. (see issue #1193)
+		config = require("plugins.nvim-tree"),
 	},
 
 	-- FZF sorter for telescope written in c
@@ -236,7 +225,7 @@ lazy.setup({
 
 	-- A minimal, stylish and customizable statusline for Neovim written in Lua
 	-- https://github.com/freddiehaddad/feline.nvim
-	"freddiehaddad/feline.nvim",
+	{ "freddiehaddad/feline.nvim", config = require("plugins.feline") },
 
 	-- Custom keymaps + menu:
 	{ "folke/which-key.nvim", config = require("plugins.which-key") },
