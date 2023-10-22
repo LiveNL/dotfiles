@@ -190,15 +190,13 @@ lazy.setup({
 		tag = "nightly", -- optional, updated every week. (see issue #1193)
 	},
 
-	-- Telescope
-	-- Use :Telescope to see all (quick) usage options
 	{
 		"nvim-telescope/telescope.nvim",
 		dependencies = { { "nvim-lua/plenary.nvim" } },
 		config = function()
 			require("telescope").load_extension("fzy_native")
 			require("telescope").load_extension("ui-select")
-			-- require("telescope").load_extension("noice")
+			require("plugins.telescope")
 		end,
 	},
 

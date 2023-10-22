@@ -9,7 +9,6 @@ g.t_co = 256
 require("opts")
 
 require("plugins")
-require("plugins.telescope")
 require("plugins.nvim-tree")
 require("plugins.lsp")
 require("plugins.treesitter")
