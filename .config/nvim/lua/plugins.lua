@@ -1,6 +1,3 @@
-local execute = vim.api.nvim_command
-local fn = vim.fn
-
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
 	vim.fn.system({
@@ -16,8 +13,6 @@ vim.opt.rtp:prepend(lazypath)
 
 local lazy = require("lazy")
 
--- startup and add configure plugins
--- Check possible requirement: pip3 install pynvim
 lazy.setup({
 	--[[ ----------- VISUALS ----------- ]]
 	-- Colorscheme
@@ -32,14 +27,7 @@ lazy.setup({
 		end,
 	},
 
-	-- Set before other plugins to let them adhere to it
-	--(
-	-- 	-- Super fast git decorations implemented purely in lua/teal.
-	-- 	-- + staging of hunks
-	-- 	-- :GitSigns
-	-- 	-- https://github.com/lewis6991/gitsigns.nvim
 	"lewis6991/gitsigns.nvim",
-	--),
 
 	--[[ ----------- LANGUAGE & COMPLETION ----------- ]]
 	-- Treesitter (language parsing & highlights)
@@ -86,6 +74,7 @@ lazy.setup({
 			})
 		end,
 	},
+
 	{
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate",
