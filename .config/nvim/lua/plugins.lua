@@ -176,9 +176,25 @@ lazy.setup({
 		config = require("plugins.coverage"),
 	},
 
-	--[[ ----------- MENUS ----------- ]]
+	-- A plugin to visualise and resolve merge conflicts in neovim
+	-- https://github.com/akinsho/git-conflict.nvim
 	{ "akinsho/git-conflict.nvim", version = "*", config = true },
 
+	-- Plugin for calling lazygit from within neovim.
+	-- https://github.com/kdheepak/lazygit.nvim
+	{
+		{
+			"kdheepak/lazygit.nvim",
+			-- optional for floating window border decoration
+			dependencies = {
+				"nvim-telescope/telescope.nvim",
+				"nvim-lua/plenary.nvim",
+			},
+			config = function()
+				require("telescope").load_extension("lazygit")
+			end,
+		},
+	},
 	-- Nvim-Tree - File Explorer For Neovim Written In Lua
 	-- https://github.com/kyazdani42/nvim-tree.lua
 	{
