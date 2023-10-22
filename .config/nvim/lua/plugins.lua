@@ -190,18 +190,15 @@ lazy.setup({
 		tag = "nightly", -- optional, updated every week. (see issue #1193)
 	},
 
+	-- FZF sorter for telescope written in c
+	{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+	"nvim-telescope/telescope-ui-select.nvim",
+
 	{
 		"nvim-telescope/telescope.nvim",
 		dependencies = { { "nvim-lua/plenary.nvim" } },
-		config = function()
-			require("telescope").load_extension("fzy_native")
-			require("telescope").load_extension("ui-select")
-			require("plugins.telescope")
-		end,
+		config = require("plugins.telescope"),
 	},
-
-	"nvim-telescope/telescope-ui-select.nvim",
-	"nvim-telescope/telescope-fzy-native.nvim",
 
 	-- Startup screen
 	{

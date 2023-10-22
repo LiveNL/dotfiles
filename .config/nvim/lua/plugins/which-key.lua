@@ -62,7 +62,20 @@ return function()
 			d = { ":echom (strftime('%H:%M:%S'))<CR>", "Time" },
 
 			f = {
+				name = "Telescope functions",
 				f = { "<cmd>Telescope find_files<cr>", "Find files" },
+				d = { "<cmd>Telescope diagnostics<cr>", "Find diagnostics issues" },
+				h = { "<cmd>Telescope command history<cr>", "Find command history" },
+				c = { "<cmd>Telescope commands<cr>", "Find commands" },
+				g = {
+					s = { "<cmd>Telescope git_status<cr>", "Find git status" },
+					c = { "<cmd>Telescope git_commits<cr>", "Find git commits" },
+					b = { "<cmd>Telescope git_branches<cr>", "Find git branches" },
+					r = { "<cmd>Telescope git_bcommits<cr>", "Find git bcommits" },
+					o = { "<cmd>Telescope git_stash<cr>", "Find git stash" },
+				},
+				l = { "<cmd>Telescope live_grep<cr>", "Find live grep" },
+				w = { "<cmd>Telescope grep_string<cr>", "Find grep string" },
 			},
 
 			k = { mode = "v", ":!black -q -<CR>", "Run black on visual selection" },
