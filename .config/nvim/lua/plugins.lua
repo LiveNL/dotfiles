@@ -169,12 +169,11 @@ lazy.setup({
 	-- Floating window used for vim-test
 	"voldikss/vim-floaterm",
 
-	-- https://github.com/andythigpen/nvim-coverage
+	-- Displays coverage information in the sign column.
 	{
 		"andythigpen/nvim-coverage",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-		},
+		dependencies = { "nvim-lua/plenary.nvim" },
+		config = require("plugins.coverage"),
 	},
 
 	--[[ ----------- MENUS ----------- ]]
