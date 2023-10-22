@@ -131,10 +131,7 @@ lazy.setup({
 	{
 		"ray-x/lsp_signature.nvim",
 		event = "VeryLazy",
-		opts = {},
-		config = function(_, opts)
-			require("lsp_signature").setup(opts)
-		end,
+		config = require("plugins.lsp-signature"),
 	},
 
 	-- null-ls.nvim Reloaded, maintained by the community.
