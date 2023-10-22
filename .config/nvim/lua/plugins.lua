@@ -170,6 +170,7 @@ lazy.setup({
 	"voldikss/vim-floaterm",
 
 	-- Displays coverage information in the sign column.
+	-- https://github.com/andythigpen/nvim-coverage
 	{
 		"andythigpen/nvim-coverage",
 		dependencies = { "nvim-lua/plenary.nvim" },
@@ -207,9 +208,15 @@ lazy.setup({
 	},
 
 	-- FZF sorter for telescope written in c
+	-- https://github.com/nvim-telescope/telescope-fzf-native.nvim
 	{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+
+	-- It sets vim.ui.select to telescope.
+	-- https://github.com/nvim-telescope/telescope-ui-select.nvim
 	"nvim-telescope/telescope-ui-select.nvim",
 
+	-- Find, Filter, Preview, Pick. All lua, all the time.
+	-- https://github.com/nvim-telescope/telescope.nvim
 	{
 		"nvim-telescope/telescope.nvim",
 		dependencies = { { "nvim-lua/plenary.nvim" } },
@@ -217,36 +224,26 @@ lazy.setup({
 	},
 
 	-- Startup screen
+	-- https://github.com/goolord/alpha-nvim
 	{
 		"goolord/alpha-nvim",
 		dependencies = { "kyazdani42/nvim-web-devicons" },
 		config = function()
 			require("alpha").setup(require("alpha.themes.startify").config)
+			-- require("alpha").setup(require("alpha.themes.dashboard").config)
 		end,
 	},
 
-	-- https://github.com/feline-nvim/feline.nvim
 	-- A minimal, stylish and customizable statusline for Neovim written in Lua
-	"feline-nvim/feline.nvim",
+	-- https://github.com/freddiehaddad/feline.nvim
+	"freddiehaddad/feline.nvim",
 
 	-- Custom keymaps + menu:
 	{ "folke/which-key.nvim", config = require("plugins.which-key") },
 
-	-- https://github.com/numToStr/Comment.nvim
-	{
-		"numToStr/Comment.nvim",
-		config = function()
-			require("Comment").setup()
-		end,
-	},
+	-- Smart and Powerful commenting plugin for neovim
+	{ "numToStr/Comment.nvim", opts = {}, lazy = false },
 
 	-- Alignment
-	-- https://github.com/echasnovski/mini.align
-	{
-		"echasnovski/mini.nvim",
-		branch = "main",
-		config = function()
-			require("mini.align").setup()
-		end,
-	},
+	{ "echasnovski/mini.nvim", version = false },
 })
