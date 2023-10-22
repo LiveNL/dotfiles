@@ -17,6 +17,7 @@ return function()
 		["<C-t>"] = { ":TestClass<CR>", "TestClass" },
 
 		c = {
+			name = "git merge conflict",
 			o = { "<cmd>GitConflictChooseOurs", "git merge conflict, choose ours" },
 			t = { "<cmd>GitConflictChooseTheirs", "git merge conflict, choose theirs" },
 			b = { "<cmd>GitConflictChooseBoth", "git merge conflict, choose both" },
