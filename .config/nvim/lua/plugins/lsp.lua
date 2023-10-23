@@ -10,7 +10,10 @@ return function()
 
 	-- Use an on_attach function to only map the following keys
 	-- after the language server attaches to the current buffer
-	local on_attach = function(_, bufnr)
+	local on_attach = function(client, bufnr)
+		if client.server_capabilities.inlayHintProvider then
+			vim.lsp.inlay_hint(bufnr, true)
+		end
 		-- Enable completion triggered by <c-x><c-o>
 		vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
@@ -50,7 +53,7 @@ return function()
 		end
 
 		-- Fallback to system Python.
-		return exepath("python3") or exepath("python") or "python"
+		return vim.fn.exepath("python3") or vim.fn.exepath("python") or "python"
 	end
 
 	-- All language servers:
@@ -103,9 +106,9 @@ return function()
 				},
 			},
 		},
-		before_init = function(_, config)
-			config.settings.python.pythonPath = get_python_path(".")
-		end,
+		-- before_init = function(_, config)
+		-- 	config.settings.python.pythonPath = get_python_path(".")
+		-- end,
 	})
 
 	lsp.svelte.setup({
