@@ -256,4 +256,20 @@ lazy.setup({
 			"MunifTanjim/nui.nvim",
 		},
 	},
+
+	-- A powerful Neovim plugin that lets users choose & modify RGB/HSL/HEX colors.
+	-- https://github.com/ziontee113/color-picker.nvim
+	{
+		"ziontee113/color-picker.nvim",
+		config = function()
+			require("color-picker")
+		end,
+	},
+
+	{
+		"norcalli/nvim-colorizer.lua",
+		config = function()
+			require("colorizer").setup()
+		end,
+	},
 })

@@ -49,6 +49,7 @@ return function()
 			},
 
 			j = { "<cmd>FormatJson<cr>", "Format json" },
+			c = { "<cmd>PickColor<cr>", "Pick Color" },
 		},
 
 		["<leader>"] = {
