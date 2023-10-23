@@ -218,10 +218,9 @@ lazy.setup({
 	{
 		"goolord/alpha-nvim",
 		dependencies = { "kyazdani42/nvim-web-devicons" },
-		config = function()
-			require("alpha").setup(require("alpha.themes.startify").config)
-			-- require("alpha").setup(require("alpha.themes.dashboard").config)
-		end,
+		-- require("alpha").setup(require("alpha.themes.startify").config)
+		-- require("alpha").setup(require("alpha.themes.dashboard").config)
+		config = require("plugins.alpha"),
 	},
 
 	-- A minimal, stylish and customizable statusline for Neovim written in Lua
