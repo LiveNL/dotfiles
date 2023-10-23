@@ -2,6 +2,8 @@
 
 return function()
 	local wk = require("which-key")
+	local Util = require("lazyvim.util")
+	local conceallevel = vim.o.conceallevel > 0 and vim.o.conceallevel or 3
 
 	wk.setup({
 		plugins = { spelling = true },
@@ -105,6 +107,74 @@ return function()
 				["<right>"] = { ":tabnext<cr>", "Next Tab" },
 				["<up>"] = { ":tabnew<cr>", "New Tab" },
 				["<down>"] = { ":tabclose<cr>", "Close Tab" },
+			},
+
+			u = {
+				name = "toggles",
+				f = {
+					function()
+						Util.format.toggle()
+					end,
+					"Toggle auto format (global)",
+				},
+				F = {
+					function()
+						Util.format.toggle(true)
+					end,
+					"Toggle auto format (buffer)",
+				},
+				s = {
+					function()
+						Util.toggle("spell")
+					end,
+					"Toggle Spelling",
+				},
+				w = {
+					function()
+						Util.toggle("wrap")
+					end,
+					"Toggle Word Wrap",
+				},
+				L = {
+					function()
+						Util.toggle("relativenumber")
+					end,
+					"Toggle Relative Line Numbers",
+				},
+				l = {
+					function()
+						Util.toggle.number()
+					end,
+					"Toggle Line Numbers",
+				},
+				d = {
+					function()
+						Util.toggle.diagnostics()
+					end,
+					"Toggle Diagnostics",
+				},
+				c = {
+					function()
+						Util.toggle("conceallevel", false, { 0, conceallevel })
+					end,
+					"Toggle Conceal",
+				},
+				h = {
+					function()
+						vim.lsp.inlay_hint(0, nil)
+					end,
+					"Toggle Inlay Hints",
+				},
+				T = {
+					function()
+						if vim.b.ts_highlight then
+							vim.treesitter.stop()
+						else
+							vim.treesitter.start()
+						end
+					end,
+					"Toggle Treesitter Highlight",
+				},
 			},
 		},
 	})
