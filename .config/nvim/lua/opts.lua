@@ -6,7 +6,6 @@ opt.colorcolumn = "80" -- str:  Show col for max line length
 opt.number = true -- bool: Show line numbers
 opt.relativenumber = false -- bool: Show relative line numbers
 opt.scrolloff = 4 -- int:  Min num lines of context
-opt.signcolumn = "yes" -- str:  Show the sign column
 
 -- [[ Filetypes ]]
 opt.encoding = "utf8" -- str:  String encoding to use
@@ -40,8 +39,9 @@ opt.hidden = true
 -- Give more space for displaying messages.
 opt.cmdheight = 1
 opt.updatetime = 200
--- opt.signcolumn     = 'auto:2-8'
-opt.signcolumn = "auto:3-4"
+
+-- Show the sign column
+opt.signcolumn = "yes:3" -- or auto:3-4
 
 vim.cmd("set cursorline")
 vim.cmd("set noshowcmd")
