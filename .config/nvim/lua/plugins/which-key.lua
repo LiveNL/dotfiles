@@ -16,7 +16,16 @@ return function()
 		["-"] = { "<C-w>-", "Decrease buffer size" },
 
 		["<C-n>"] = { ":NvimTreeToggle<CR>", "NvimTreeToggle" },
-		["<C-t>"] = { ":TestClass<CR>", "TestClass" },
+
+		["<C-t>"] = {
+			name = "Tests",
+			j = { "<cmd>Neotest run file<CR>", "Neotest run file" },
+			O = { "<cmd>Neotest output<CR>", "Neotest show output" },
+			o = { "<cmd>Neotest output-panel<CR>", "Neotest show output panel" },
+			s = { "<cmd>Neotest summary<CR>", "Neotest show summary" },
+			a = { "<cmd>Neotest run tests<CR>", "Neotest run all" },
+			l = { "<cmd>Neotest attach<CR>", "Neotest attatch to test console" },
+		},
 
 		c = {
 			name = "git merge conflict",

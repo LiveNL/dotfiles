@@ -274,4 +274,14 @@ lazy.setup({
 			require("colorizer").setup()
 		end,
 	},
+
+	{
+		"nvim-neotest/neotest",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"antoinemadec/FixCursorHold.nvim",
+			"nvim-neotest/neotest-python",
+		},
+		config = require("plugins.neotest"),
+	},
 })
