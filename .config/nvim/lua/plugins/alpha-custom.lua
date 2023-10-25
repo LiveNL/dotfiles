@@ -49,6 +49,12 @@ return function()
 		val = {
 			dashboard.button("l", "💤 Lazy", "<cmd>Lazy<CR>"),
 			dashboard.button("m", "🧱 Mason", "<cmd>Mason<CR>"),
+			dashboard.button("e", "  New file", "<cmd>ene<CR>"),
+			dashboard.button("SPC f", "󰍉  Find file"),
+			dashboard.button("SPC F", "󰈞  Find text"),
+			dashboard.button("u", "  Update plugins", "<cmd>Lazy sync<CR>"),
+			dashboard.button("q", "󰩈  Close", "<cmd>qa<CR>"),
+			dashboard.button("q", "󰩈  Quit", "<cmd>qa<CR>"),
 		},
 		position = "center",
 	}
@@ -202,9 +208,9 @@ return function()
 		{ type = "padding", val = 2 },
 		get_mru(7),
 		{ type = "padding", val = 3 },
-		get_info(),
-		{ type = "padding", val = 3 },
 		get_footer({}, 50),
+		{ type = "padding", val = 3 },
+		get_info(),
 	}
 
 	require("alpha").setup(theme.config)
