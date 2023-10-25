@@ -51,4 +51,5 @@ return function()
 	-- FZF sorter for telescope written in c
 	require("telescope").load_extension("fzf")
 	require("telescope").load_extension("ui-select")
+	require("telescope").load_extension("project")
 end

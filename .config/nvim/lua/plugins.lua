@@ -205,6 +205,12 @@ lazy.setup({
 	-- https://github.com/nvim-telescope/telescope-ui-select.nvim
 	"nvim-telescope/telescope-ui-select.nvim",
 
+	-- https://github.com/nvim-telescope/telescope-project.nvim
+	{
+		"nvim-telescope/telescope-project.nvim",
+		lazy = true,
+	},
+
 	-- Find, Filter, Preview, Pick. All lua, all the time.
 	-- https://github.com/nvim-telescope/telescope.nvim
 	{
