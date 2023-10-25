@@ -62,6 +62,24 @@ return function()
 		position = "center",
 	}
 
+	-- MRU
+	local function get_mru(max_shown)
+		local tbl = {
+			{
+				type = "text",
+				val = "Recent Files",
+				opts = { hl = "SpecialComment", position = "center" },
+			},
+		}
+
+		local mru_list = theme.mru(1, "", max_shown)
+		for _, file in ipairs(mru_list.val) do
+			table.insert(tbl, file)
+		end
+
+		return { type = "group", val = tbl, opts = {} }
+	end
+
 	theme.config.layout = {
 		{ type = "padding", val = 4 },
 		get_header({
@@ -72,6 +90,8 @@ return function()
 		}),
 		{ type = "padding", val = 1 },
 		links,
+		{ type = "padding", val = 2 },
+		get_mru(7),
 	}
 
 	require("alpha").setup(theme.config)
