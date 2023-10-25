@@ -1,6 +1,11 @@
 return function()
 	local function set_env_from_file(filename)
 		local file = io.open(filename, "r")
+
+		if file == nil then
+			return
+		end
+
 		local content = file:read("*all")
 		file:close()
 
