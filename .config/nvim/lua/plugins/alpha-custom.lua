@@ -138,6 +138,26 @@ return function()
 		return { type = "group", val = tbl, opts = {} }
 	end
 
+	-- Footer
+	local function get_footer(quotes, width)
+		local fortune = require("alpha.fortune")
+		local quote_text = fortune()
+
+		local max_width = width or 35
+
+		local tbl = {}
+		for _, text in ipairs(quote_text) do
+			local padded_text = require("plugins.utils").pad_string(text, max_width, "right")
+			table.insert(tbl, { type = "text", val = padded_text, opts = { hl = "Comment", position = "center" } })
+		end
+
+		return {
+			type = "group",
+			val = tbl,
+			opts = {},
+		}
+	end
+
 	-- Info section
 	local function get_info()
 		local datetime = os.date(" %A %B %d")
@@ -183,6 +203,8 @@ return function()
 		get_mru(7),
 		{ type = "padding", val = 3 },
 		get_info(),
+		{ type = "padding", val = 3 },
+		get_footer({}, 50),
 	}
 
 	require("alpha").setup(theme.config)
