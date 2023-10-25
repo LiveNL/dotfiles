@@ -1,12 +1,3 @@
--- local M = {
--- 	"goolord/alpha-nvim",
--- 	enabled = true,
--- 	cond = vim.g.vscode == nil,
--- 	dependencies = { "nvim-tree/nvim-web-devicons" },
--- 	event = "VimEnter",
--- }
-
--- M.config = function()
 return function()
 	local headers = require("plugins.alpha-headers")
 	local theme = require("alpha.themes.theta")
@@ -80,6 +71,35 @@ return function()
 		return { type = "group", val = tbl, opts = {} }
 	end
 
+	-- Info section
+	local function get_info()
+		local datetime = os.date(" %A %B %d")
+		local version = vim.version()
+		local nvim_version_info = "ⓥ " .. version.major .. "." .. version.minor .. "." .. version.patch
+		local lazy_stats = require("lazy").stats()
+		local os = "OS: " .. vim.loop.os_uname().sysname
+		local startup_time = "Startup: " .. lazy_stats.startuptime .. " sec"
+		local total_plugins = " " .. lazy_stats.loaded .. "/" .. lazy_stats.count .. " packages"
+		local info_string = datetime
+			.. "  |  "
+			.. total_plugins
+			.. "  |  "
+			.. nvim_version_info
+			.. " | "
+			.. startup_time
+			.. " | "
+			.. os
+
+		return {
+			type = "text",
+			val = info_string,
+			opts = {
+				hl = "Delimiter",
+				position = "center",
+			},
+		}
+	end
+
 	theme.config.layout = {
 		{ type = "padding", val = 4 },
 		get_header({
@@ -92,9 +112,9 @@ return function()
 		links,
 		{ type = "padding", val = 2 },
 		get_mru(7),
+		{ type = "padding", val = 3 },
+		get_info(),
 	}
 
 	require("alpha").setup(theme.config)
 end
-
--- return M
