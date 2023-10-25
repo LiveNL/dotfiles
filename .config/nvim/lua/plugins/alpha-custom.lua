@@ -51,6 +51,17 @@ return function()
 		return apply_gradient_hl(header_text)
 	end
 
+	-- Links / tools
+	local dashboard = require("alpha.themes.dashboard")
+	local links = {
+		type = "group",
+		val = {
+			dashboard.button("l", "💤 Lazy", "<cmd>Lazy<CR>"),
+			dashboard.button("m", "🧱 Mason", "<cmd>Mason<CR>"),
+		},
+		position = "center",
+	}
+
 	theme.config.layout = {
 		{ type = "padding", val = 4 },
 		get_header({
@@ -59,6 +70,8 @@ return function()
 			headers.robustLines,
 			headers.efficientLines,
 		}),
+		{ type = "padding", val = 1 },
+		links,
 	}
 
 	require("alpha").setup(theme.config)
