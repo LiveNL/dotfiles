@@ -296,4 +296,8 @@ lazy.setup({
 		},
 		config = require("plugins.neotest"),
 	},
+
+	-- A pretty window for previewing, navigating and editing your LSP locations
+	-- https://github.com/DNLHC/glance.nvim
+	{ "dnlhc/glance.nvim" },
 })
