@@ -47,14 +47,14 @@ return function()
 	local links = {
 		type = "group",
 		val = {
-			dashboard.button("l", "💤 Lazy", "<cmd>Lazy<CR>"),
-			dashboard.button("m", "🧱 Mason", "<cmd>Mason<CR>"),
-			dashboard.button("e", "  New file", "<cmd>ene<CR>"),
-			dashboard.button("SPC f", "󰍉  Find file"),
-			dashboard.button("SPC F", "󰈞  Find text"),
-			dashboard.button("u", "  Update plugins", "<cmd>Lazy sync<CR>"),
-			dashboard.button("q", "󰩈  Close", "<cmd>qa<CR>"),
-			dashboard.button("q", "󰩈  Quit", "<cmd>qa<CR>"),
+			dashboard.button("l", ">  💤 Lazy", "<cmd>Lazy<CR>"),
+			dashboard.button("m", ">  🧱 Mason", "<cmd>Mason<CR>"),
+			dashboard.button("e", ">    New file", "<cmd>ene<CR>"),
+			dashboard.button("f", ">    Find file", "<cmd>Telescope find_files<CR>"),
+			dashboard.button("F", ">    Find text", "<cmd>Telescope live_grep<CR>"),
+			dashboard.button("u", ">    Update plugins", "<cmd>Lazy sync<CR>"),
+			dashboard.button("q", ">  󰩈  Close", "<cmd>close<CR>"),
+			dashboard.button("Q", "> '  Quit", "<cmd>qa<CR>"),
 		},
 		position = "center",
 	}
@@ -64,7 +64,7 @@ return function()
 		local alphabet = "abcdefghijknopqrstuvwxyz"
 
 		local tbl = {
-			{ type = "text", val = "Recent Projects", opts = { hl = "SpecialComment", position = "center" } },
+			{ type = "text", val = "   Recent Projects", opts = { hl = "SpecialComment", position = "center" } },
 		}
 
 		local project_list = require("telescope._extensions.project.utils").get_projects("recent")
@@ -76,7 +76,7 @@ return function()
 			local icon = "📁 "
 
 			-- create shortened path for display
-			local target_width = 35
+			local target_width = 50
 			local display_path = project.path:gsub("/", "\\"):gsub("\\\\", "\\")
 			if #display_path > target_width then
 				display_path = plenary_path.new(display_path):shorten(1, { -2, -1 })
@@ -128,10 +128,13 @@ return function()
 
 	-- MRU
 	local function get_mru(max_shown)
+		local text = "Recent files"
+		local padded_text = require("plugins.utils").pad_string(text, 100, "center")
+
 		local tbl = {
 			{
 				type = "text",
-				val = "Recent Files",
+				val = padded_text,
 				opts = { hl = "SpecialComment", position = "center" },
 			},
 		}
@@ -149,7 +152,7 @@ return function()
 		local fortune = require("alpha.fortune")
 		local quote_text = fortune()
 
-		local max_width = width or 35
+		local max_width = width or 50
 
 		local tbl = {}
 		for _, text in ipairs(quote_text) do
@@ -168,7 +171,7 @@ return function()
 	local function get_info()
 		local datetime = os.date(" %A %B %d")
 		local version = vim.version()
-		local nvim_version_info = "ⓥ " .. version.major .. "." .. version.minor .. "." .. version.patch
+		local nvim_version_info = "ⓥ  " .. version.major .. "." .. version.minor .. "." .. version.patch
 		local lazy_stats = require("lazy").stats()
 		local os = "OS: " .. vim.loop.os_uname().sysname
 		local startup_time = "Startup: " .. lazy_stats.startuptime .. " sec"
@@ -201,15 +204,15 @@ return function()
 			headers.robustLines,
 			headers.efficientLines,
 		}),
-		{ type = "padding", val = 1 },
+		{ type = "padding", val = 4 },
 		links,
 		{ type = "padding", val = 2 },
 		get_projects(5),
-		{ type = "padding", val = 2 },
+		{ type = "padding", val = 4 },
 		get_mru(7),
 		{ type = "padding", val = 3 },
 		get_footer({}, 50),
-		{ type = "padding", val = 3 },
+		{ type = "padding", val = 4 },
 		get_info(),
 	}
 
