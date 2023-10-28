@@ -27,14 +27,11 @@ return function()
 			l = { "<cmd>Neotest attach<CR>", "Neotest attatch to test console" },
 		},
 
-		c = {
-			name = "git merge conflict",
-			o = { "<cmd>GitConflictChooseOurs", "git merge conflict, choose ours" },
-			t = { "<cmd>GitConflictChooseTheirs", "git merge conflict, choose theirs" },
-			b = { "<cmd>GitConflictChooseBoth", "git merge conflict, choose both" },
-			["0"] = { "<cmd>GitConflictChooseNone", "git merge conflict, choose none" },
-			["<right>"] = { "<cmd>GitConflictNextConflict", "git merge conflict: move to previous conflict" },
-			["<left>"] = { "<cmd>GitConflictPrevConflict", "git merge conflict: move to next conflict" },
+		g = {
+			D = { "<cmd>Glance definitions<cr>", "Glance definitions" },
+			R = { "<cmd>Glance references<cr>", "Glance references" },
+			Y = { "<cmd>Glance type_definitions<cr>", "Glance type definitions" },
+			M = { "<cmd>Glance implementations<cr>", "Glance implementations" },
 		},
 
 		h = {
@@ -98,6 +95,16 @@ return function()
 				name = "lazygit",
 				l = { "<cmd>Lazy<cr>", "Lazy" },
 				g = { "<cmd>LazyGit<cr>", "LazyGit" },
+			},
+
+			m = {
+				name = "git merge conflict",
+				o = { "<cmd>GitConflictChooseOurs<cr>", "git merge conflict, choose ours" },
+				t = { "<cmd>GitConflictChooseTheirs<cr>", "git merge conflict, choose theirs" },
+				b = { "<cmd>GitConflictChooseBoth<cr>", "git merge conflict, choose both" },
+				["0"] = { "<cmd>GitConflictChooseNone<cr>", "git merge conflict, choose none" },
+				["<right>"] = { "<cmd>GitConflictNextConflict<cr>", "git merge conflict: move to previous conflict" },
+				["<left>"] = { "<cmd>GitConflictPrevConflict<cr>", "git merge conflict: move to next conflict" },
 			},
 
 			s = {
