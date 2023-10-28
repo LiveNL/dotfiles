@@ -186,11 +186,11 @@ lazy.setup({
 		},
 	},
 	-- Nvim-Tree - File Explorer For Neovim Written In Lua
-	-- https://github.com/kyazdani42/nvim-tree.lua
+	-- https://github.com/nvim-tree/nvim-tree.lua
 	{
-		"kyazdani42/nvim-tree.lua",
+		"nvim-tree/nvim-tree.lua",
 		dependencies = {
-			"kyazdani42/nvim-web-devicons", -- optional, for file icons
+			"nvim-tree/nvim-web-devicons", -- optional, for file icons
 			"elihunter173/dirbuf.nvim",
 		},
 		tag = "nightly", -- optional, updated every week. (see issue #1193)
@@ -223,7 +223,7 @@ lazy.setup({
 	-- https://github.com/goolord/alpha-nvim
 	{
 		"goolord/alpha-nvim",
-		dependencies = { "kyazdani42/nvim-web-devicons" },
+		dependencies = { "nvim-tree/nvim-web-devicons" },
 		event = "VimEnter",
 		enabled = true,
 		cond = vim.g.vscode == nil,
