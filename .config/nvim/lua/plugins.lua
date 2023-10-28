@@ -275,6 +275,8 @@ lazy.setup({
 		end,
 	},
 
+	-- The fastest Neovim colorizer.
+	-- https://github.com/norcalli/nvim-colorizer.lua
 	{
 		"norcalli/nvim-colorizer.lua",
 		config = function()
