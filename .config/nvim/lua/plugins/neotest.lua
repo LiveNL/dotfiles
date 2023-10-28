@@ -76,6 +76,14 @@ return function()
 					return "pytest"
 				end,
 			}),
+			require("neotest-jest")({
+				jestCommand = "npm run jest --",
+				jestConfigFile = "jest.config.js",
+				env = { CI = true },
+				cwd = function(path)
+					return vim.fn.getcwd()
+				end,
+			}),
 		},
 	})
 end

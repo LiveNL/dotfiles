@@ -284,12 +284,15 @@ lazy.setup({
 		end,
 	},
 
+	-- An extensible framework for interacting with tests within NeoVim.
+	-- https://github.com/nvim-neotest/neotest
 	{
 		"nvim-neotest/neotest",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			"antoinemadec/FixCursorHold.nvim",
 			"nvim-neotest/neotest-python",
+			"nvim-neotest/neotest-jest",
 		},
 		config = require("plugins.neotest"),
 	},
