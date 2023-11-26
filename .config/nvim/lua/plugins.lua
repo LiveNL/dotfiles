@@ -223,8 +223,8 @@ lazy.setup({
 	-- https://github.com/goolord/alpha-nvim
 	{
 		"goolord/alpha-nvim",
-		dependencies = { "nvim-tree/nvim-web-devicons" },
-		event = "VimEnter",
+		dependencies = { "kyazdani42/nvim-web-devicons" },
+		-- event = "VimEnter",
 		enabled = true,
 		cond = vim.g.vscode == nil,
 		config = require("plugins.alpha-custom"),
