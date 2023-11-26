@@ -300,4 +300,16 @@ lazy.setup({
 	-- A pretty window for previewing, navigating and editing your LSP locations
 	-- https://github.com/DNLHC/glance.nvim
 	{ "dnlhc/glance.nvim" },
+
+	{
+		"jinh0/eyeliner.nvim",
+		config = function()
+			require("eyeliner").setup({
+				highlight_on_key = true, -- show highlights only after keypress
+				dim = false, -- dim all other characters if set to true (recommended!)
+			})
+		end,
+	},
+
+	{ "google/vim-searchindex", opt = true },
 })
