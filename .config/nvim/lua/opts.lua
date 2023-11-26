@@ -60,3 +60,7 @@ vim.filetype.add({
 		applescript = "applescript",
 	},
 })
+
+-- HIGHLIGHTS
+-- vim.cmd("highlight @text.uri cterm=italic gui=italic guifg=bg guibg=#ff9664")
+-- vim.cmd("highlight @text.literal cterm=italic gui=italic guifg=bg guibg=#ff9664")
