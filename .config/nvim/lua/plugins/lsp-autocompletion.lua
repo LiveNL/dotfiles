@@ -37,8 +37,7 @@ return function()
 				behavior = cmp.ConfirmBehavior.Replace,
 				select = false,
 			}),
-			["<C-Space>"] = cmp.mapping.complete(),
-			["<Space>"] = vim.schedule_wrap(function(fallback)
+			["<Tab>"] = vim.schedule_wrap(function(fallback)
 				if cmp.visible() and has_words_before() then
 					cmp.select_next_item({ behavior = cmp.SelectBehavior.Select })
 				else
