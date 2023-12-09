@@ -225,7 +225,7 @@ lazy.setup({
 		"goolord/alpha-nvim",
 		dependencies = { "kyazdani42/nvim-web-devicons" },
 		-- event = "VimEnter",
-		enabled = true,
+		enabled = false,
 		cond = vim.g.vscode == nil,
 		config = require("plugins.alpha-custom"),
 	},
