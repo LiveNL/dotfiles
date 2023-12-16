@@ -34,6 +34,8 @@ lazy.setup({
 	-- https://github.com/lewis6991/gitsigns.nvim
 	{ "lewis6991/gitsigns.nvim", config = require("plugins.gitsigns") },
 
+	{ "f-person/git-blame.nvim" },
+
 	-- This plugin adds horizontal highlights for text like markdown etc.
 	-- https://github.com/lukas-reineke/headlines.nvim
 	{
