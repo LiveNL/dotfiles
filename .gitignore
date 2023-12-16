@@ -25,3 +25,5 @@ packer_compiled.lua
 .watchmanconfig
 .pyre_configuration
 nvim.log
+follower.json
+username.json
