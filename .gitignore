@@ -21,6 +21,7 @@ packer_compiled.lua
 .config/github-copilot/
 .config/op/
 .config/gem/
+.config/gpt4all.io/
 .watchmanconfig
 .pyre_configuration
 nvim.log
