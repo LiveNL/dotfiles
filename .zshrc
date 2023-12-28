@@ -35,7 +35,7 @@ alias curl='noglob curl'
 alias project_lines='git ls-files | xargs wc -l'
 alias wallpapers='open /Library/Application\ Support/com.apple.idleassetsd/Customer/4KSDR240FPS'
 alias 32key="uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]'"
-alias nvim="rm nvim.log && nvim -V9nvim.log"
+alias nvim="rm -f nvim.log && nvim -V9nvim.log"
 
 # requires pip install git+https://github.com/jeffkaufman/icdiff.git
 alias gdiff='git difftool --extcmd icdiff -y'
@@ -67,9 +67,12 @@ export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=6'
 plugins=(git ssh-agent)
 
 # pyenv
+export RESOLVE_SCRIPT_API="/Library/Application\ Support/Blackmagic\ Design/DaVinci\ Resolve/Developer/Scripting/"
+export RESOLVE_SCRIPT_LIB="/Applications/DaVinci\ Resolve/DaVinci\ Resolve.app/Contents/Libraries/Fusion/fusionscript.so"
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 export PYTHONPATH="$PWD"
+export PYTHONPATH="$PYTHONPATH:$RESOLVE_SCRIPT_API/Modules/"
 export MYPYPATH="$PYTHONPATH"
 
 if command -v pyenv 1>/dev/null 2>&1; then
@@ -79,3 +82,5 @@ fi
 bindkey '^R' history-incremental-search-backward
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
+
+
