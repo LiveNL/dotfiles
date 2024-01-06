@@ -1,0 +1,109 @@
+dynamic_title = true
+enable_experimental_conpty_backend = false
+live_config_reload = true
+
+[[colors.indexed_colors]]
+color = "0xff8349"
+index = 16
+
+[[colors.indexed_colors]]
+color = "0xcb7985"
+index = 17
+
+[colors.bright]
+black = "0x4e5157"
+blue = "0x73a3b7"
+cyan = "0xafd4de"
+green = "0x8eb2af"
+magenta = "0xb97490"
+red = "0xeb746b"
+white = "0xeeeeee"
+yellow = "0xfdb292"
+
+[colors.normal]
+black = "0x2f3239"
+blue = "0x5a93aa"
+cyan = "0xa1cdd8"
+green = "0x7aa4a1"
+magenta = "0xad5c7c"
+red = "0xe85c51"
+white = "0xebebeb"
+yellow = "0xfda47f"
+
+[colors.primary]
+background = "0x152528"
+foreground = "0xe6eaea"
+
+[cursor]
+style = "Block"
+unfocused_hollow = true
+vi_mode_style = "Beam"
+
+[debug]
+log_level = "Warn"
+persistent_logging = false
+print_events = false
+ref_test = false
+render_timer = false
+
+[env]
+TERM = "alacritty"
+
+[font]
+size = 9
+
+[font.glyph_offset]
+x = 0
+y = 0
+
+[font.normal]
+family = "LiterationMono Nerd Font"
+style = "Book"
+
+[font.offset]
+x = 0
+y = 0
+
+[mouse]
+hide_when_typing = true
+
+[[mouse.bindings]]
+action = "PasteSelection"
+mouse = "Middle"
+
+[mouse.double_click]
+threshold = 300
+
+[mouse.hints.launcher]
+args = []
+program = "open"
+
+[mouse.triple_click]
+threshold = 300
+
+[scrolling]
+history = 10000
+multiplier = 3
+scrolling_multiplier = 3
+
+[selection]
+save_to_clipboard = true
+semantic_escape_chars = ",│`|:''' ()[]{}<>"
+
+[visual_bell]
+animation = "EaseOutExpo"
+color = "#ffffff"
+duration = 0
+
+[window]
+decorations = "full"
+dynamic_padding = false
+startup_mode = "Windowed"
+
+[window.dimensions]
+columns = 140
+lines = 40
+
+[window.padding]
+x = 0
+y = 0
