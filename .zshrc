@@ -84,3 +84,5 @@ export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
 
 
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
