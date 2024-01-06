@@ -243,7 +243,14 @@ lazy.setup({
 	{ "numToStr/Comment.nvim", opts = {}, lazy = false },
 
 	-- Alignment
-	{ "echasnovski/mini.nvim", version = false },
+	{
+		"echasnovski/mini.align",
+		lazy = false,
+		version = "*",
+		config = function()
+			require("mini.align").setup()
+		end,
+	},
 
 	{
 		"folke/trouble.nvim",
