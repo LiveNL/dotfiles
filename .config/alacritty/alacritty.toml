@@ -1,5 +1,3 @@
-dynamic_title = true
-enable_experimental_conpty_backend = false
 live_config_reload = true
 
 [[colors.indexed_colors]]
@@ -43,7 +41,6 @@ vi_mode_style = "Beam"
 log_level = "Warn"
 persistent_logging = false
 print_events = false
-ref_test = false
 render_timer = false
 
 [env]
@@ -71,29 +68,9 @@ hide_when_typing = true
 action = "PasteSelection"
 mouse = "Middle"
 
-[mouse.double_click]
-threshold = 300
-
-[mouse.hints.launcher]
-args = []
-program = "open"
-
-[mouse.triple_click]
-threshold = 300
-
-[scrolling]
-history = 10000
-multiplier = 3
-scrolling_multiplier = 3
-
 [selection]
 save_to_clipboard = true
 semantic_escape_chars = ",│`|:''' ()[]{}<>"
-
-[visual_bell]
-animation = "EaseOutExpo"
-color = "#ffffff"
-duration = 0
 
 [window]
 decorations = "full"
