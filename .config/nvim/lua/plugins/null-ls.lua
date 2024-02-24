@@ -30,59 +30,18 @@ return function()
 	-- NOTE: THE ORDER IS IPMORTANT: ISORT BEFORE BLACK
 	null_ls.setup({
 		sources = {
-			formatting.prettierd.with({
-				condition = function(utils)
-					return not utils.root_has_file({
-						".eslintrc.json",
-						".eslintrc",
-						".eslintrc.js",
-						"frontend/.eslintrc.json",
-						"frontend/.xo-config.json",
-					})
-				end,
-			}),
 			formatting.isort.with({
 				extra_args = { "--use-parentheses", "--profile", "black" },
 				filetypes = { "python" },
 			}),
 
-			diagnostics.flake8,
-			diagnostics.xo.with({
-				prefer_local = "node_modules/.bin",
-				extra_filetypes = { "svelte" },
-			}),
 			diagnostics.write_good.with({ filetypes = { "markdown", "text" } }),
 
-			formatting.autoflake.with({
-				extra_args = {
-					"--remove-all-unused-imports",
-					"--remove-unused-variables",
-				},
-			}),
 			formatting.black.with({ extra_args = { "-l", "80", "--fast" } }),
-			formatting.eslint_d.with({
-				condition = function(utils)
-					return utils.root_has_file({
-						".eslintrc.json",
-						".eslintrc",
-						".eslintrc.js",
-						"frontend/.eslintrc.json",
-						"frontend/.xo-config.json",
-					})
-				end,
-			}),
 			formatting.stylua,
 
-			code_actions.shellcheck,
 			code_actions.gitsigns,
 			code_actions.refactoring,
-			code_actions.xo,
-
-			-- disabled in favor of xo:
-			-- diagnostics.eslint,
-			-- diagnostics.eslint_d.with({
-			-- 	diagnostics_format = "[eslint] #{m}\n(#{c})",
-			-- }),
 		},
 		debug = false,
 		on_attach = function(client, bufnr)

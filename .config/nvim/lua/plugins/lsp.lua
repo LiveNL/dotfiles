@@ -115,4 +115,14 @@ return function()
 		-- Add filetypes for the server to run and share info between files
 		filetypes = { "typescript", "javascript", "svelte", "html", "css" },
 	})
+
+	lsp.ruff_lsp.setup({
+		on_attach = on_attach,
+		init_options = {
+			settings = {
+				-- Any extra CLI arguments for `ruff` go here.
+				args = {},
+			},
+		},
+	})
 end
