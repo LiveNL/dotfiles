@@ -92,7 +92,7 @@ if command -v pyenv 1>/dev/null 2>&1; then
 fi
 
 bindkey '^R' history-incremental-search-backward
-export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+eval "$(rbenv init - zsh)"
 export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
 
 
