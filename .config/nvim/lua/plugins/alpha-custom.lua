@@ -196,6 +196,8 @@ return function()
 		}
 	end
 
+	theme.config.close_on_tabnew = true
+
 	theme.config.layout = {
 		{ type = "padding", val = 4 },
 		get_header({
