@@ -48,6 +48,19 @@ function auto_pipenv_shell {
     fi
 }
 
+function find_replace() {
+    if [ "$#" -ne 2 ]; then
+        echo "Usage: find_replace <input> <output>"
+        return 1
+    fi
+
+    local input=$1
+    local output=$2
+
+    ag -l "$input" | xargs sed -i '' "s/$input/$output/g"
+}
+
+
 # colors for terminal and tmux
 export TERM="xterm-256color"
 export EDITOR="nvim"
