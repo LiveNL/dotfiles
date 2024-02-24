@@ -95,6 +95,5 @@ bindkey '^R' history-incremental-search-backward
 eval "$(rbenv init - zsh)"
 export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
 
-
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
