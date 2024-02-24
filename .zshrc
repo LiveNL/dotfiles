@@ -35,7 +35,6 @@ alias curl='noglob curl'
 alias project_lines='git ls-files | xargs wc -l'
 alias wallpapers='open /Library/Application\ Support/com.apple.idleassetsd/Customer/4KSDR240FPS'
 alias 32key="uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]'"
-alias nvim="rm -f nvim.log && nvim -V9nvim.log"
 
 # requires pip install git+https://github.com/jeffkaufman/icdiff.git
 alias gdiff='git difftool --extcmd icdiff -y'
