@@ -234,7 +234,7 @@ lazy.setup({
 
 	-- A minimal, stylish and customizable statusline for Neovim written in Lua
 	-- https://github.com/freddiehaddad/feline.nvim
-	{ "freddiehaddad/feline.nvim", config = require("plugins.feline") },
+	-- { "freddiehaddad/feline.nvim", config = require("plugins.feline") },
 
 	-- Custom keymaps + menu:
 	{ "folke/which-key.nvim", config = require("plugins.which-key") },
