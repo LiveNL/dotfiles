@@ -88,7 +88,12 @@ return function()
 				w = { "<cmd>Telescope grep_string<cr>", "Find grep string" },
 			},
 
-			k = { mode = "v", ":!black -q -<CR>", "Run black on visual selection" },
+			k = {
+				name = "black",
+				mode = "v",
+				":!black -q -<CR>",
+				"Run black on visual selection",
+			},
 
 			l = {
 				mode = "n",
