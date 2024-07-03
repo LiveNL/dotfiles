@@ -98,7 +98,7 @@ return function()
 	-- https://www.flake8rules.com/rules/
 	lsp.pylsp.setup({
 		on_attach = on_attach,
-		flags = lsp_flag,
+		flags = lsp_flags,
 		settings = {
 			-- configure plugins in pylsp
 			pylsp = {
