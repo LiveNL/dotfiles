@@ -39,6 +39,9 @@ return function()
 			header = "",
 			prefix = "",
 		},
+		signs = true,
+		underline = true,
+		update_in_insert = false,
 	})
 
 	-- Show line diagnostics automatically in hover window

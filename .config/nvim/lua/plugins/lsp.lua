@@ -129,7 +129,26 @@ return function()
 
 	lsp.svelte.setup({
 		-- Add filetypes for the server to run and share info between files
-		filetypes = { "typescript", "javascript", "svelte", "html", "css" },
+		-- filetypes = { "typescript", "javascript", "svelte", "html", "css" },
+		filetypes = { "svelte", "html", "css" },
+	})
+
+	local capabilities = require("cmp_nvim_lsp").default_capabilities()
+	-- Typescript
+	lsp.tsserver.setup({
+		capabilities = capabilities,
+		on_attach = function(client, bufnr)
+			client.server_capabilities.documentFormattingProvider = false
+		end,
+	})
+
+	lsp.eslint.setup({
+		on_attach = function(client, bufnr)
+			vim.api.nvim_create_autocmd("BufWritePre", {
+				buffer = bufnr,
+				command = "EslintFixAll",
+			})
+		end,
 	})
 
 	lsp.ruff_lsp.setup({
@@ -140,5 +159,22 @@ return function()
 				args = {},
 			},
 		},
+	})
+
+	lsp.jsonls.setup({
+		settings = {
+			json = {
+				-- Configure JSON schemas and other settings
+				schemas = require("schemastore").json.schemas(),
+				validate = { enable = true },
+			},
+		},
+		on_attach = function(client, bufnr)
+			local function buf_set_option(...)
+				vim.api.nvim_buf_set_option(bufnr, ...)
+			end
+			-- Enable completion triggered by <c-x><c-o>
+			buf_set_option("omnifunc", "v:lua.vim.lsp.omnifunc")
+		end,
 	})
 end
