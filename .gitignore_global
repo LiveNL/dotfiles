@@ -13,3 +13,4 @@ dump.rdb
 /.yarn.lock
 /.yarnclean
 tags
+.ruff.toml
