@@ -5,6 +5,7 @@ export LANG=en_US.UTF-8
 export N_PREFIX=/usr/local
 
 export PATH="$PATH:/usr/local/bin"
+export PATH="/Users/livenl/.local/bin:$PATH"
 
 if [[ ! -z ${SSH_AGENT_PID+x} ]]
 then
@@ -86,6 +87,8 @@ export PATH="$PYENV_ROOT/bin:$PATH"
 export PYTHONPATH="$PWD"
 export PYTHONPATH="$PYTHONPATH:$RESOLVE_SCRIPT_API/Modules/"
 export MYPYPATH="$PYTHONPATH"
+
+export ANTROPIC_API_KEY=$(cat ~/.antropic_api_key)
 
 if command -v pyenv 1>/dev/null 2>&1; then
   eval "$(pyenv init -)"
