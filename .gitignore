@@ -27,3 +27,5 @@ packer_compiled.lua
 nvim.log
 follower.json
 username.json
+ruff.toml
+.aider*
