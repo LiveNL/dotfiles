@@ -77,55 +77,67 @@ return function()
 	-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
 
 	-- (Optional) Configure lua language server for neovim
-	lsp.pyright.setup({
-		on_attach = on_attach,
-		flags = lsp_flags,
-		settings = {
-			python = {
-				executionEnvironments = {
-					autoSearchPaths = false,
-					root = ".",
-				},
-				analysis = {
-					autoSearchPaths = false,
-					root = ".",
-					extraPaths = ".",
-				},
-			},
-		},
-	})
+	-- lsp.pyright.setup({
+	-- 	on_attach = on_attach,
+	-- 	flags = lsp_flags,
+	-- 	settings = {
+	-- 		python = {
+	-- 			executionEnvironments = {
+	-- 				autoSearchPaths = false,
+	-- 				root = ".",
+	-- 			},
+	-- 			analysis = {
+	-- 				autoSearchPaths = false,
+	-- 				root = ".",
+	-- 				extraPaths = ".",
+	-- 			},
+	-- 		},
+	-- 	},
+	-- })
+
+  lsp.basedpyright.setup({
+    settings = {
+      basedpyright = {
+        analysis = {
+          autoSearchPaths = true,
+          diagnosticMode = "openFilesOnly",
+          useLibraryCodeForTypes = true
+        }
+      }
+    }
+  })
 
 	-- https://www.flake8rules.com/rules/
-	lsp.pylsp.setup({
-		on_attach = on_attach,
-		flags = lsp_flags,
-		settings = {
-			-- configure plugins in pylsp
-			pylsp = {
-				plugins = {
-					pyflakes = { enabled = false },
-					mccabe = {
-						enabled = true,
-						threshold = 4,
-					},
-					pylint = {
-						enabled = true,
-						args = {
-							"--ignore=E221,E201,E202,E272,E251,W503,E712,E711",
-							"--disable=C0116,C0115,C0114,C0121",
-						},
-					},
-					pycodestyle = {
-						ignore = { "E221", "E201", "E202", "E272", "E251", "W503", "E241", "E712", "E711" },
-						enabled = true,
-					},
-				},
-			},
-		},
-		-- before_init = function(_, config)
-		-- 	config.settings.python.pythonPath = get_python_path(".")
-		-- end,
-	})
+	-- lsp.pylsp.setup({
+	-- 	on_attach = on_attach,
+	-- 	flags = lsp_flags,
+	-- 	settings = {
+	-- 		-- configure plugins in pylsp
+	-- 		pylsp = {
+	-- 			plugins = {
+	-- 				pyflakes = { enabled = false },
+	-- 				mccabe = {
+	-- 					enabled = true,
+	-- 					threshold = 4,
+	-- 				},
+	-- 				pylint = {
+	-- 					enabled = true,
+	-- 					args = {
+	-- 						"--ignore=E221,E201,E202,E272,E251,W503,E712,E711",
+	-- 						"--disable=C0116,C0115,C0114,C0121",
+	-- 					},
+	-- 				},
+	-- 				pycodestyle = {
+	-- 					ignore = { "E221", "E201", "E202", "E272", "E251", "W503", "E241", "E712", "E711" },
+	-- 					enabled = true,
+	-- 				},
+	-- 			},
+	-- 		},
+	-- 	},
+	-- 	-- before_init = function(_, config)
+	-- 	-- 	config.settings.python.pythonPath = get_python_path(".")
+	-- 	-- end,
+	-- })
 
 	lsp.svelte.setup({
 		-- Add filetypes for the server to run and share info between files
@@ -135,7 +147,7 @@ return function()
 
 	local capabilities = require("cmp_nvim_lsp").default_capabilities()
 	-- Typescript
-	lsp.tsserver.setup({
+	lsp.ts_ls.setup({
 		capabilities = capabilities,
 		on_attach = function(client, bufnr)
 			client.server_capabilities.documentFormattingProvider = false
@@ -151,7 +163,7 @@ return function()
 		end,
 	})
 
-	lsp.ruff_lsp.setup({
+	lsp.ruff.setup({
 		on_attach = on_attach,
 		init_options = {
 			settings = {

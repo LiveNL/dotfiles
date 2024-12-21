@@ -7,196 +7,196 @@ return function()
 
 	wk.setup({
 		plugins = { spelling = true },
-		key_labels = { ["<leader>"] = "COMMA" },
-	})
-
-	wk.register({
-		["="] = { ":nohlsearch<CR>", "Clear search" },
-		["+"] = { "<C-w>+", "Increase buffer size" },
-		["-"] = { "<C-w>-", "Decrease buffer size" },
-
-		["<C-n>"] = { ":NvimTreeToggle<CR>", "NvimTreeToggle" },
-
-		["<C-t>"] = {
-			name = "Tests",
-			j = { "<cmd>Neotest run file<CR>", "Neotest run file" },
-			O = { "<cmd>Neotest output<CR>", "Neotest show output" },
-			o = { "<cmd>Neotest output-panel<CR>", "Neotest show output panel" },
-			s = { "<cmd>Neotest summary<CR>", "Neotest show summary" },
-			a = { "<cmd>Neotest run tests<CR>", "Neotest run all" },
-			l = { "<cmd>Neotest attach<CR>", "Neotest attatch to test console" },
-		},
-
-		g = {
-			D = { "<cmd>Glance definitions<cr>", "Glance definitions" },
-			R = { "<cmd>Glance references<cr>", "Glance references" },
-			Y = { "<cmd>Glance type_definitions<cr>", "Glance type definitions" },
-			M = { "<cmd>Glance implementations<cr>", "Glance implementations" },
-		},
-
-		h = {
-			name = "helpers",
-			d = {
-				function()
-					local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-					local seen = {}
-					local duplicates = {}
-
-					for _, line in ipairs(lines) do
-						if seen[line] then
-							duplicates[line] = (duplicates[line] or 1) + 1
-						end
-						seen[line] = true
-					end
-
-					for line, count in pairs(duplicates) do
-						print(line .. " [" .. count .. " times]")
-					end
-				end,
-				"Finds duplicate lines within a file",
-			},
-
-			j = { "<cmd>FormatJson<cr>", "Format json" },
-			c = { "<cmd>PickColor<cr>", "Pick Color" },
-		},
-
-		["<leader>"] = {
-			b = {
-				mode = "n",
-				name = "debuggers",
-				p = { 'irequire"pry";binding.pry; <esc>:w<cr>', "Pry" },
-				o = { "iimport pdb; pdb.set_trace(); <cr>", "Pdb" },
-				i = { "idebugger; <cr>", "Debugger" },
-			},
-
-			d = { ":echom (strftime('%H:%M:%S'))<CR>", "Time" },
-
-			f = {
-				name = "Telescope functions",
-				f = { "<cmd>Telescope find_files<cr>", "Find files" },
-				d = { "<cmd>Telescope diagnostics<cr>", "Find diagnostics issues" },
-				h = { "<cmd>Telescope command history<cr>", "Find command history" },
-				c = { "<cmd>Telescope commands<cr>", "Find commands" },
-				g = {
-					s = { "<cmd>Telescope git_status<cr>", "Find git status" },
-					c = { "<cmd>Telescope git_commits<cr>", "Find git commits" },
-					b = { "<cmd>Telescope git_branches<cr>", "Find git branches" },
-					r = { "<cmd>Telescope git_bcommits<cr>", "Find git bcommits" },
-					o = { "<cmd>Telescope git_stash<cr>", "Find git stash" },
-				},
-				l = { "<cmd>Telescope live_grep<cr>", "Find live grep" },
-				w = { "<cmd>Telescope grep_string<cr>", "Find grep string" },
-			},
-
-			k = {
-				name = "black",
-				mode = "v",
-				":!black -q -<CR>",
-				"Run black on visual selection",
-			},
-
-			l = {
-				mode = "n",
-				name = "lazygit",
-				l = { "<cmd>Lazy<cr>", "Lazy" },
-				g = { "<cmd>LazyGit<cr>", "LazyGit" },
-			},
-
-			m = {
-				name = "git merge conflict",
-				o = { "<cmd>GitConflictChooseOurs<cr>", "git merge conflict, choose ours" },
-				t = { "<cmd>GitConflictChooseTheirs<cr>", "git merge conflict, choose theirs" },
-				b = { "<cmd>GitConflictChooseBoth<cr>", "git merge conflict, choose both" },
-				["0"] = { "<cmd>GitConflictChooseNone<cr>", "git merge conflict, choose none" },
-				["<right>"] = { "<cmd>GitConflictNextConflict<cr>", "git merge conflict: move to previous conflict" },
-				["<left>"] = { "<cmd>GitConflictPrevConflict<cr>", "git merge conflict: move to next conflict" },
-			},
-
-			s = {
-				mode = "n",
-				name = "buffers",
-				["<left>"] = { ":topleft vnew <CR>:Alpha<CR>", "New buffer left" },
-				["<right>"] = { ":botright vnew <CR>:Alpha<CR>", "New buffer right" },
-				["<up>"] = { ":above sp <CR>:Alpha<CR>", "New buffer top" },
-				["<down>"] = { ":below sp <CR>:Alpha<CR>", "New buffer bottom" },
-			},
-
-			t = {
-				mode = "n",
-				name = "tabs",
-				["<left>"] = { ":tabprevious<cr>", "Previous Tab" },
-				["<right>"] = { ":tabnext<cr>", "Next Tab" },
-				["<up>"] = { ":tabnew<cr>", "New Tab" },
-				["<down>"] = { ":tabclose<cr>", "Close Tab" },
-			},
-
-			u = {
-				name = "toggles",
-				f = {
-					function()
-						Util.format.toggle()
-					end,
-					"Toggle auto format (global)",
-				},
-				F = {
-					function()
-						Util.format.toggle(true)
-					end,
-					"Toggle auto format (buffer)",
-				},
-				s = {
-					function()
-						Util.toggle("spell")
-					end,
-					"Toggle Spelling",
-				},
-				w = {
-					function()
-						Util.toggle("wrap")
-					end,
-					"Toggle Word Wrap",
-				},
-				L = {
-					function()
-						Util.toggle("relativenumber")
-					end,
-					"Toggle Relative Line Numbers",
-				},
-				l = {
-					function()
-						Util.toggle.number()
-					end,
-					"Toggle Line Numbers",
-				},
-				d = {
-					function()
-						Util.toggle.diagnostics()
-					end,
-					"Toggle Diagnostics",
-				},
-				c = {
-					function()
-						Util.toggle("conceallevel", false, { 0, conceallevel })
-					end,
-					"Toggle Conceal",
-				},
-				h = {
-					function()
-						vim.lsp.inlay_hint(0, nil)
-					end,
-					"Toggle Inlay Hints",
-				},
-				T = {
-					function()
-						if vim.b.ts_highlight then
-							vim.treesitter.stop()
-						else
-							vim.treesitter.start()
-						end
-					end,
-					"Toggle Treesitter Highlight",
-				},
+		opts = {
+			replace = {
+				["<leader>"] = "COMMA",
 			},
 		},
 	})
+
+	local keys = {
+		{ "=", ":nohlsearch<CR>", desc = "Clear search" },
+		{ "+", "<C-w>+", desc = "Increase buffer size" },
+		{ "-", "<C-w>-", desc = "Decrease buffer size" },
+		{ "<C-n>", ":NvimTreeToggle<CR>", desc = "NvimTreeToggle" },
+
+		{ "<C-t>", group = "Tests" },
+		{ "<C-t>O", "<cmd>Neotest output<CR>", desc = "Neotest show output" },
+		{ "<C-t>a", "<cmd>Neotest run tests<CR>", desc = "Neotest run all" },
+		{ "<C-t>j", "<cmd>Neotest run file<CR>", desc = "Neotest run file" },
+		{ "<C-t>l", "<cmd>Neotest attach<CR>", desc = "Neotest attatch to test console" },
+		{ "<C-t>o", "<cmd>Neotest output-panel<CR>", desc = "Neotest show output panel" },
+		{ "<C-t>s", "<cmd>Neotest summary<CR>", desc = "Neotest show summary" },
+
+		{ "gD", "<cmd>Glance definitions<cr>", desc = "Glance definitions" },
+		{ "gM", "<cmd>Glance implementations<cr>", desc = "Glance implementations" },
+		{ "gR", "<cmd>Glance references<cr>", desc = "Glance references" },
+		{ "gY", "<cmd>Glance type_definitions<cr>", desc = "Glance type definitions" },
+
+		{ "h", group = "helpers" },
+		{
+			"hd",
+			function()
+				local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+				local seen = {}
+				local duplicates = {}
+
+				for _, line in ipairs(lines) do
+					if seen[line] then
+						duplicates[line] = (duplicates[line] or 1) + 1
+					end
+					seen[line] = true
+				end
+
+				for line, count in pairs(duplicates) do
+					print(line .. " [" .. count .. " times]")
+				end
+			end,
+			desc = "Finds duplicate lines within a file",
+		},
+
+		{ "hj", "<cmd>FormatJson<cr>", desc = "Format json" },
+
+		{ "hc", "<cmd>PickColor<cr>", desc = "Pick Color" },
+
+		{ "<leader>b", group = "debuggers" },
+		{ "<leader>bi", "idebugger; <cr>", desc = "Debugger" },
+		{ "<leader>bo", "iimport pdb; pdb.set_trace(); <cr>", desc = "Pdb" },
+		{ "<leader>bp", 'irequire"pry";binding.pry; <esc>:w<cr>', desc = "Pry" },
+
+		{ "<leader>d", ":echom (strftime('%H:%M:%S'))<CR>", desc = "Time" },
+
+		{ "<leader>f", group = "Telescope functions" },
+		{ "<leader>fc", "<cmd>Telescope commands<cr>", desc = "Find commands" },
+		{ "<leader>fd", "<cmd>Telescope diagnostics<cr>", desc = "Find diagnostics issues" },
+		{ "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
+		{ "<leader>fgb", "<cmd>Telescope git_branches<cr>", desc = "Find git branches" },
+		{ "<leader>fgc", "<cmd>Telescope git_commits<cr>", desc = "Find git commits" },
+		{ "<leader>fgo", "<cmd>Telescope git_stash<cr>", desc = "Find git stash" },
+		{ "<leader>fgr", "<cmd>Telescope git_bcommits<cr>", desc = "Find git bcommits" },
+		{ "<leader>fgs", "<cmd>Telescope git_status<cr>", desc = "Find git status" },
+		{ "<leader>fh", "<cmd>Telescope command history<cr>", desc = "Find command history" },
+		{ "<leader>fl", "<cmd>Telescope live_grep<cr>", desc = "Find live grep" },
+		{ "<leader>fw", "<cmd>Telescope grep_string<cr>", desc = "Find grep string" },
+
+		{ "<leader>k", ":!black -q -<CR>", group = "black", mode = "v" },
+
+		{ "<leader>l", group = "lazygit" },
+		{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" },
+		{ "<leader>ll", "<cmd>Lazy<cr>", desc = "Lazy" },
+
+		{ "<leader>m", group = "git merge conflict" },
+		{ "<leader>m0", "<cmd>GitConflictChooseNone<cr>", desc = "git merge conflict, choose none" },
+		{
+			"<leader>m<left>",
+			"<cmd>GitConflictPrevConflict<cr>",
+			desc = "git merge conflict: move to next conflict",
+		},
+		{
+			"<leader>m<right>",
+			"<cmd>GitConflictNextConflict<cr>",
+			desc = "git merge conflict: move to previous conflict",
+		},
+		{ "<leader>mb", "<cmd>GitConflictChooseBoth<cr>", desc = "git merge conflict, choose both" },
+		{ "<leader>mo", "<cmd>GitConflictChooseOurs<cr>", desc = "git merge conflict, choose ours" },
+		{ "<leader>mt", "<cmd>GitConflictChooseTheirs<cr>", desc = "git merge conflict, choose theirs" },
+
+		{ "<leader>s", group = "buffers" },
+		{ "<leader>s<down>", ":below sp <CR>:lua MiniStarter.open()<CR>", desc = "New buffer bottom" },
+		{ "<leader>s<left>", ":topleft vnew <CR>:lua MiniStarter.open()<CR>", desc = "New buffer left" },
+		{ "<leader>s<right>", ":botright vnew <CR>:lua MiniStarter.open()<CR>", desc = "New buffer right" },
+		{ "<leader>s<up>", ":above sp <CR>:lua MiniStarter.open()<CR>", desc = "New buffer top" },
+
+		{ "<leader>t", group = "tabs" },
+		{ "<leader>t<down>", ":tabclose<cr>", desc = "Close Tab" },
+		{ "<leader>t<left>", ":tabprevious<cr>", desc = "Previous Tab" },
+		{ "<leader>t<right>", ":tabnext<cr>", desc = "Next Tab" },
+		{ "<leader>t<up>", ":tabnew<cr>", desc = "New Tab" },
+
+		{ "<leader>u", group = "toggles" },
+		{
+			"<leader>uF",
+			function()
+				Util.format.toggle(true)
+			end,
+			desc = "Toggle auto format (buffer)",
+		},
+
+		{
+			"<leader>uL",
+			function()
+				Util.toggle("relativenumber")
+			end,
+			desc = "Toggle Relative Line Numbers",
+		},
+		{
+			"<leader>uT",
+			function()
+				if vim.b.ts_highlight then
+					vim.treesitter.stop()
+				else
+					vim.treesitter.start()
+				end
+			end,
+			desc = "Toggle Treesitter Highlight",
+		},
+
+		{
+			"<leader>uc",
+			function()
+				Util.toggle("conceallevel", false, { 0, conceallevel })
+			end,
+			desc = "Toggle Conceal",
+		},
+
+		{
+			"<leader>ud",
+			function()
+				Util.toggle.diagnostics()
+			end,
+			desc = "Toggle Diagnostics",
+		},
+
+		{
+			"<leader>uf",
+			function()
+				Util.format.toggle()
+			end,
+			desc = "Toggle auto format (global)",
+		},
+
+		{
+			"<leader>uh",
+			function()
+				vim.lsp.inlay_hint(0, nil)
+			end,
+			desc = "Toggle Inlay Hints",
+		},
+
+		{
+			"<leader>ul",
+			function()
+				Util.toggle.number()
+			end,
+			desc = "Toggle Line Numbers",
+		},
+
+		{
+			"<leader>us",
+			function()
+				Util.toggle("spell")
+			end,
+			desc = "Toggle Spelling",
+		},
+
+		{
+			"<leader>uw",
+			function()
+				Util.toggle("wrap")
+			end,
+			desc = "Toggle Word Wrap",
+		},
+	}
+
+	wk.add(keys)
 end

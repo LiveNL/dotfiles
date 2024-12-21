@@ -104,7 +104,7 @@ lazy.setup({
 		"hrsh7th/nvim-cmp",
 		event = "InsertEnter",
 		dependencies = {
-			{ "L3MON4D3/LuaSnip" },
+			{ "L3MON4D3/LuaSnip", build = "make install_jsregexp" },
 			{ "rafamadriz/friendly-snippets" }, -- Optional
 			{ "hrsh7th/cmp-buffer" }, -- Optional
 			{ "hrsh7th/cmp-path" }, -- Optional
@@ -130,6 +130,16 @@ lazy.setup({
 		config = require("plugins.lsp"),
 	},
 
+
+  {
+      "MysticalDevil/inlay-hints.nvim",
+      event = "LspAttach",
+      dependencies = { "neovim/nvim-lspconfig" },
+      config = function()
+          require("inlay-hints").setup()
+      end
+  },
+
 	-- show lsp status
 	-- https://github.com/j-hui/fidget.nvim
 	{ "j-hui/fidget.nvim", tag = "legacy", event = "LspAttach", opts = {} },
@@ -151,6 +161,7 @@ lazy.setup({
 			"neovim/nvim-lspconfig",
 		},
 		config = require("plugins.null-ls"),
+    enabled = false
 	},
 
 	-- mason-null-ls bridges mason.nvim with the null-ls plugin -
@@ -232,6 +243,14 @@ lazy.setup({
 		enabled = false,
 		cond = vim.g.vscode == nil,
 		config = require("plugins.alpha-custom"),
+	},
+
+	{
+		"echasnovski/mini.nvim",
+		version = "*",
+		config = function()
+			require("plugins.mini")
+		end,
 	},
 
 	-- A minimal, stylish and customizable statusline for Neovim written in Lua
@@ -324,4 +343,53 @@ lazy.setup({
 	},
 
 	{ "google/vim-searchindex", opt = true },
+
+	{
+		"yetone/avante.nvim",
+		event = "VeryLazy",
+		lazy = false,
+		version = false, -- set this if you want to always pull the latest change
+		opts = {
+			-- add any opts here
+      provider = "copilot", -- Recommend using Claude
+      auto_suggestions_provider = "copilot",
+		},
+		-- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+		build = "make",
+		-- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+		dependencies = {
+			"stevearc/dressing.nvim",
+			"nvim-lua/plenary.nvim",
+			"MunifTanjim/nui.nvim",
+			--- The below dependencies are optional,
+			"hrsh7th/nvim-cmp", -- autocompletion for avante commands and mentions
+			"nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+			"zbirenbaum/copilot.lua", -- for providers='copilot'
+			{
+				-- support for image pasting
+				"HakonHarnes/img-clip.nvim",
+				event = "VeryLazy",
+				opts = {
+					-- recommended settings
+					default = {
+						embed_image_as_base64 = false,
+						prompt_for_file_name = false,
+						drag_and_drop = {
+							insert_mode = true,
+						},
+						-- required for Windows users
+						use_absolute_path = true,
+					},
+				},
+			},
+			{
+				-- Make sure to set this up properly if you have lazy=true
+				"MeanderingProgrammer/render-markdown.nvim",
+				opts = {
+					file_types = { "markdown", "Avante" },
+				},
+				ft = { "markdown", "Avante" },
+			},
+		},
+	},
 })
