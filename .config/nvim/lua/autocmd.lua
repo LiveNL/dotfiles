@@ -48,6 +48,17 @@ augroup("luaupdates")(function(autocmd)
 	end)
 end)
 
+augroup("BlackFormatOnSave")(function(autocmd)
+	autocmd({ "BufWritePost" }, { pattern = "*.py" }, function()
+		-- Such that newly created files are found immediately
+    vim.fn.system({"black", "-l", "80", "--fast", vim.fn.expand("%:p")})
+    -- Optionally, run ruff to autofix linting issues
+    vim.fn.system({"ruff", "--fix", vim.fn.expand("%:p")})
+
+    vim.cmd("checktime")
+	end)
+end)
+
 local function format_json()
 	local start_line = vim.fn.getpos("'<")[2]
 	local end_line = vim.fn.getpos("'>")[2]
@@ -65,11 +76,11 @@ vim.api.nvim_exec(
 
 vim.api.nvim_create_augroup("diagnostics", { clear = true })
 
--- Required to keep diagnostics alive appareantly (javascript)
+-- Required to keep diagnostics alive apparently (javascript)
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
 	group = "diagnostics",
 	callback = function()
 		vim.diagnostic.setloclist({ open = false })
-		vim.diagnostic.enable(0)
+		vim.diagnostic.enable(true, { bufnr = 0 })
 	end,
 })
