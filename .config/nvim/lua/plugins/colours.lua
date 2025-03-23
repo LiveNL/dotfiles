@@ -9,12 +9,24 @@ vim.api.nvim_set_hl(0, "NeoTreeSymbolicLinkTarget", { link = "NvimTreeSymlink" }
 vim.api.nvim_set_hl(0, "NeoTreeRootName", { link = "NvimTreeRootFolder" })
 vim.api.nvim_set_hl(0, "NeoTreeFileNameOpened", { link = "NvimTreeOpenedFile" })
 
+-- Define the gray color you want for the underlines
+local gray_color = "#808080"
+
+-- Update the highlight groups
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = gray_color })
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineWarn", { undercurl = true, sp = gray_color })
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineInfo", { undercurl = true, sp = gray_color })
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = gray_color })
+vim.api.nvim_set_hl(0, "DiagnosticUnderlineOk", { undercurl = true, sp = gray_color })
+
+
 -- linked groups for all themes
 vim.api.nvim_set_hl(0, "TroubleCount", { link = "DiagnosticOk" })
 vim.api.nvim_set_hl(0, "TroubleTextHint", { link = "DiagnosticHint" })
 vim.api.nvim_set_hl(0, "TroubleTextError", { link = "DiagnosticError" })
 vim.api.nvim_set_hl(0, "TroubleTextWarning", { link = "DiagnosticWarn" })
 vim.api.nvim_set_hl(0, "TroubleTextInformation", { link = "DiagnosticInfo" })
+
 
 local C = {}
 

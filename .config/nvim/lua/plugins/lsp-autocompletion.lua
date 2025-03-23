@@ -19,7 +19,7 @@ return function()
 		sources = {
 			{ name = "copilot" },
 			{ name = "nvim_lsp" },
-			{ name = "path" },
+      { name = "path", option = { label_trailing_slash = true } }, -- Allow trailing slashes
 			{ name = "luasnip" },
 		},
 

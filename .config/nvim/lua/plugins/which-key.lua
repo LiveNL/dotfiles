@@ -1,5 +1,11 @@
 -- https://github.com/folke/which-key.nvim
 
+-- https://github.com/nvzone/menu?tab=readme-ov-file
+vim.keymap.set("n", "<C-j>", function()
+  require("menu").open("default")
+end, {})
+
+
 return function()
 	local wk = require("which-key")
 	local Util = require("lazyvim.util")

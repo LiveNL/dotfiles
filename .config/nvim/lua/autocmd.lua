@@ -52,7 +52,9 @@ augroup("BlackFormatOnSave")(function(autocmd)
 	autocmd({ "BufWritePost" }, { pattern = "*.py" }, function()
 		-- Such that newly created files are found immediately
     vim.fn.system({"black", "-l", "80", "--fast", vim.fn.expand("%:p")})
+
     -- Optionally, run ruff to autofix linting issues
+		vim.fn.system({"ruff", "--select", "I", "--fix", vim.fn.expand("%:p")})
     vim.fn.system({"ruff", "--fix", vim.fn.expand("%:p")})
 
     vim.cmd("checktime")
