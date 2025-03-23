@@ -58,8 +58,10 @@ function find_replace() {
     local input=$1
     local output=$2
 
-    ag -l "$input" | xargs sed -i '' "s/$input/$output/g"
+    ag -l "$input" | xargs sed -i "s/$input/$output/g"
 }
+
+alias find_replace=find_replace
 
 
 # colors for terminal and tmux
