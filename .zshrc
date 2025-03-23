@@ -90,7 +90,8 @@ export PYTHONPATH="$PWD"
 export PYTHONPATH="$PYTHONPATH:$RESOLVE_SCRIPT_API/Modules/"
 export MYPYPATH="$PYTHONPATH"
 
-export ANTROPIC_API_KEY=$(cat ~/.antropic_api_key)
+export ANTHROPIC_API_KEY=$(cat ~/.antropic_api_key)
+export OPENAI_API_KEY=$(cat ~/.openai_api_key)
 
 if command -v pyenv 1>/dev/null 2>&1; then
   eval "$(pyenv init -)"
@@ -101,5 +102,9 @@ eval "$(rbenv init - zsh)"
 export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+export PATH="/opt/homebrew/bin:$PATH"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+
+ulimit -n 4096
+export PATH=~/.npm-global/bin:$PATH
