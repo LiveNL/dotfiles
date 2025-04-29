@@ -109,3 +109,4 @@ export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
 ulimit -n 4096
 export PATH=~/.npm-global/bin:$PATH
 alias dig="/opt/homebrew/bin/dig"
+export PATH="$HOME/.npm-global/bin:$PATH"
