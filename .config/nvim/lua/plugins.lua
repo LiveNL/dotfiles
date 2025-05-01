@@ -152,22 +152,7 @@ lazy.setup({
 		config = require("plugins.lsp-signature"),
 	},
 
-	-- null-ls.nvim Reloaded, maintained by the community.
-	-- https://github.com/nvimtools/none-ls.nvim
-	{
-		"nvimtools/none-ls.nvim",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			"neovim/nvim-lspconfig",
-		},
-		config = require("plugins.null-ls"),
-    enabled = false
-	},
-
-	-- mason-null-ls bridges mason.nvim with the null-ls plugin -
-	-- making it easier to use both plugins together.
-	-- https://github.com/jay-babu/mason-null-ls.nvim
-	{ "jay-babu/mason-null-ls.nvim" },
+	-- Removed null-ls and related plugins
 
 	-- autopairs for neovim written by lua
 	-- https://github.com/windwp/nvim-autopairs
