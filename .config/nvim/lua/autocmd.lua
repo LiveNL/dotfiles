@@ -1,4 +1,3 @@
--- https://www.reddit.com/r/neovim/comments/t7k5k1/are_there_any_examples_of_how_to_use_nvim_create/
 ---@param group string
 local augroup = function(group)
 	vim.api.nvim_create_augroup(group, { clear = true })
@@ -20,7 +19,6 @@ end
 augroup("test_coverage_show")(function(autocmd)
 	autocmd({ "FileType" }, { pattern = "python" }, function()
 		local file_exists = io.open(".coverage", "r") ~= nil
-		-- require('coverage').clear()
 		if file_exists and vim.g.coverage_loaded == 0 then
 			require("coverage").load(true)
 		end
@@ -29,7 +27,6 @@ end)
 
 augroup("refresh")(function(autocmd)
 	autocmd({ "BufWritePost" }, { pattern = "*.py" }, function()
-		-- Such that newly created files are found immediately
 		pcall(LspRestart)
 	end)
 end)
@@ -50,16 +47,13 @@ end)
 
 augroup("BlackFormatOnSave")(function(autocmd)
 	autocmd({ "BufWritePost" }, { pattern = "*.py" }, function()
-		-- Such that newly created files are found immediately
     vim.fn.system({"black", "-l", "80", "--fast", vim.fn.expand("%:p")})
-
-    -- Optionally, run ruff to autofix linting issues
 		vim.fn.system({"ruff", "--select", "I", "--fix", vim.fn.expand("%:p")})
     vim.fn.system({"ruff", "--fix", vim.fn.expand("%:p")})
-
     vim.cmd("checktime")
 	end)
 end)
+
 
 local function format_json()
 	local start_line = vim.fn.getpos("'<")[2]
@@ -78,7 +72,6 @@ vim.api.nvim_exec(
 
 vim.api.nvim_create_augroup("diagnostics", { clear = true })
 
--- Required to keep diagnostics alive apparently (javascript)
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
 	group = "diagnostics",
 	callback = function()
@@ -86,3 +79,18 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
 		vim.diagnostic.enable(true, { bufnr = 0 })
 	end,
 })
+
+vim.api.nvim_create_user_command("LspStatus", function()
+  local clients = vim.lsp.get_active_clients({ bufnr = 0 })
+  if #clients == 0 then
+    vim.notify("No LSP clients attached to this buffer", vim.log.levels.WARN)
+    return
+  end
+
+  local message = "LSP clients attached to this buffer:\n"
+  for _, client in ipairs(clients) do
+    message = message .. "- " .. client.name .. "\n"
+  end
+
+  vim.notify(message, vim.log.levels.INFO)
+end, {})

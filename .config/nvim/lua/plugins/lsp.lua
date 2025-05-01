@@ -3,22 +3,33 @@ return function()
   local util = require("lspconfig/util")
   local path = util.path
 
+  require("mason").setup()
+  require("mason-lspconfig").setup({
+    ensure_installed = {
+      "eslint",
+      "ts_ls",
+      "svelte",
+      "basedpyright",
+      "jsonls",
+      "ruff",
+    },
+    automatic_installation = true,
+  })
+
   local lsp_flags = {
-    -- This is the default in Nvim 0.7+
     debounce_text_changes = 150,
   }
 
-  -- Use an on_attach function to only map the following keys
-  -- after the language server attaches to the current buffer
   local on_attach = function(client, bufnr)
     if client.server_capabilities.inlayHintProvider then
-      vim.lsp.inlay_hint(bufnr, true)
+      if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint) == "function" then
+        vim.lsp.inlay_hint(bufnr, true)
+      elseif vim.lsp.inlay_hint and type(vim.lsp.inlay_hint) == "table" and vim.lsp.inlay_hint.enable then
+        vim.lsp.inlay_hint.enable(true)
+      end
     end
-    -- Enable completion triggered by <c-x><c-o>
     vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
-    -- Mappings.
-    -- See `:help vim.lsp.*` for documentation on any of the below functions
     local bufopts = { noremap = true, silent = true, buffer = bufnr }
 
     bufopts.desc = "Go to declaration"
@@ -55,45 +66,19 @@ return function()
   end
 
   local function get_python_path(workspace)
-    -- Use activated virtualenv.
     if vim.env.VIRTUAL_ENV then
       return path.join(vim.env.VIRTUAL_ENV, "bin", "python")
     end
 
-    -- Find and use virtualenv in workspace directory.
     for _, pattern in ipairs({ "*", ".*" }) do
-      local match = vim.fn.glob(path.join(workspace, pattern, "pyvenv.cfg")) or "" -- Ensure match is never nil
+      local match = vim.fn.glob(path.join(workspace, pattern, "pyvenv.cfg")) or ""
       if match ~= "" and match ~= nil then
         return path.join(path.dirname(match), "bin", "python")
       end
     end
 
-    -- Fallback to system Python.
     return vim.fn.exepath("python3") or vim.fn.exepath("python") or "python"
   end
-
-  -- All language servers:
-  -- https://github.com/neovim/nvim-lspconfig
-  -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
-
-  -- (Optional) Configure lua language server for neovim
-  -- lsp.pyright.setup({
-  -- 	on_attach = on_attach,
-  -- 	flags = lsp_flags,
-  -- 	settings = {
-  -- 		python = {
-  -- 			executionEnvironments = {
-  -- 				autoSearchPaths = false,
-  -- 				root = ".",
-  -- 			},
-  -- 			analysis = {
-  -- 				autoSearchPaths = false,
-  -- 				root = ".",
-  -- 				extraPaths = ".",
-  -- 			},
-  -- 		},
-  -- 	},
-  -- })
 
   lsp.basedpyright.setup({
     root_dir = util.root_pattern("src", ".git", "pyproject.toml", "setup.py", "setup.cfg"),
@@ -104,7 +89,7 @@ return function()
           diagnosticMode = "openFilesOnly",
           useLibraryCodeForTypes = true,
           diagnosticSeverityOverrides = {
-            reportUnusedCallResult = false         -- Disable this warning
+            reportUnusedCallResult = false
           },
 
         },
@@ -121,51 +106,46 @@ return function()
     end,
   })
 
-  -- https://www.flake8rules.com/rules/
-  -- lsp.pylsp.setup({
-  -- 	on_attach = on_attach,
-  -- 	flags = lsp_flags,
-  -- 	settings = {
-  -- 		-- configure plugins in pylsp
-  -- 		pylsp = {
-  -- 			plugins = {
-  -- 				pyflakes = { enabled = false },
-  -- 				mccabe = {
-  -- 					enabled = true,
-  -- 					threshold = 4,
-  -- 				},
-  -- 				pylint = {
-  -- 					enabled = true,
-  -- 					args = {
-  -- 						"--ignore=E221,E201,E202,E272,E251,W503,E712,E711",
-  -- 						"--disable=C0116,C0115,C0114,C0121",
-  -- 					},
-  -- 				},
-  -- 				pycodestyle = {
-  -- 					ignore = { "E221", "E201", "E202", "E272", "E251", "W503", "E241", "E712", "E711" },
-  -- 					enabled = true,
-  -- 				},
-  -- 			},
-  -- 		},
-  -- 	},
-  -- 	-- before_init = function(_, config)
-  -- 	-- 	config.settings.python.pythonPath = get_python_path(".")
-  -- 	-- end,
-  -- })
 
   lsp.svelte.setup({
-    -- Add filetypes for the server to run and share info between files
-    -- filetypes = { "typescript", "javascript", "svelte", "html", "css" },
     filetypes = { "svelte", "html", "css" },
+    on_attach = function(client, bufnr)
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = bufnr,
+        callback = function()
+          vim.lsp.buf.format({ bufnr = bufnr })
+        end,
+      })
+    end,
+    settings = {
+      svelte = {
+        format = {
+          enable = true,
+        },
+      },
+    },
   })
 
   local capabilities = require("cmp_nvim_lsp").default_capabilities()
-  -- Typescript
+  
   lsp.ts_ls.setup({
     capabilities = capabilities,
     on_attach = function(client, bufnr)
       client.server_capabilities.documentFormattingProvider = false
+      on_attach(client, bufnr)
     end,
+    settings = {
+      typescript = {
+        format = {
+          enable = false
+        }
+      },
+      javascript = {
+        format = {
+          enable = false
+        }
+      }
+    }
   })
 
   lsp.eslint.setup({
@@ -174,14 +154,29 @@ return function()
         buffer = bufnr,
         command = "EslintFixAll",
       })
+
+      on_attach(client, bufnr)
     end,
+    settings = {
+      useESLintClass = false,
+      experimental = {
+        useFlatConfig = true
+      },
+      workingDirectories = { { mode = "auto" } },
+      validate = "on",
+      packageManager = "npm",
+      codeActionOnSave = {
+        enable = true,
+        mode = "all"
+      },
+      format = true
+    }
   })
 
   lsp.ruff.setup({
     on_attach = on_attach,
     init_options = {
       settings = {
-        -- Any extra CLI arguments for `ruff` go here.
         args = {},
       },
     },
@@ -190,7 +185,6 @@ return function()
   lsp.jsonls.setup({
     settings = {
       json = {
-        -- Configure JSON schemas and other settings
         schemas = require("schemastore").json.schemas(),
         validate = { enable = true },
       },
@@ -199,7 +193,6 @@ return function()
       local function buf_set_option(...)
         vim.api.nvim_buf_set_option(bufnr, ...)
       end
-      -- Enable completion triggered by <c-x><c-o>
       buf_set_option("omnifunc", "v:lua.vim.lsp.omnifunc")
     end,
   })
