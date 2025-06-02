@@ -94,3 +94,18 @@ vim.api.nvim_create_user_command("LspStatus", function()
 
   vim.notify(message, vim.log.levels.INFO)
 end, {})
+
+augroup("EslintFixTS")(function(autocmd)
+  autocmd({ "BufWritePost" }, { pattern = "*.{js,jsx,ts,tsx}" }, function()
+    local file_path = vim.fn.expand("%:p")
+    local cmd = "cd " .. vim.fn.expand("%:p:h") .. " && npx eslint --fix " .. file_path
+
+    vim.fn.jobstart(cmd, {
+      on_exit = function(_, code)
+        if code == 0 then
+          vim.cmd("checktime")
+        end
+      end,
+    })
+  end)
+end)
