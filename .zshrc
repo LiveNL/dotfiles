@@ -110,3 +110,4 @@ ulimit -n 4096
 export PATH=~/.npm-global/bin:$PATH
 alias dig="/opt/homebrew/bin/dig"
 export PATH="$HOME/.npm-global/bin:$PATH"
+alias claude="/Users/livenl/.claude/local/claude"
