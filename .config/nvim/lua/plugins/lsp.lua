@@ -12,8 +12,14 @@ return function()
       "basedpyright",
       "jsonls",
       "ruff",
+      "lua_ls",
     },
     automatic_installation = true,
+    handlers = {
+      function(server_name)
+        require("lspconfig")[server_name].setup({})
+      end,
+    },
   })
 
   local lsp_flags = {
@@ -198,4 +204,48 @@ return function()
       buf_set_option("omnifunc", "v:lua.vim.lsp.omnifunc")
     end,
   })
+
+  lsp.lua_ls.setup({
+    on_attach = on_attach,
+    settings = {
+      Lua = {
+        runtime = {
+          version = "LuaJIT",
+        },
+        diagnostics = {
+          globals = { "vim" },
+        },
+        workspace = {
+          library = vim.api.nvim_get_runtime_file("", true),
+          checkThirdParty = false,
+        },
+        telemetry = {
+          enable = false,
+        },
+      },
+    },
+  })
+
+  vim.fn.sign_define("DiagnosticSignError", { text = "E", texthl = "DiagnosticSignError" })
+  vim.fn.sign_define("DiagnosticSignWarn", { text = "W", texthl = "DiagnosticSignWarn" })
+  vim.fn.sign_define("DiagnosticSignHint", { text = "H", texthl = "DiagnosticSignHint" })
+  vim.fn.sign_define("DiagnosticSignInfo", { text = "I", texthl = "DiagnosticSignInfo" })
+
+  vim.diagnostic.config({
+    virtual_text = false,
+    severity_sort = true,
+    float = {
+      style = "minimal",
+      border = "rounded",
+      source = "always",
+      header = "",
+      prefix = "",
+    },
+    signs = true,
+    underline = true,
+    update_in_insert = false,
+  })
+
+  vim.o.updatetime = 300
+  vim.cmd([[autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})]])
 end

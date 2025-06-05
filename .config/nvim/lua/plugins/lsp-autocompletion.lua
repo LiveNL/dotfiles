@@ -1,9 +1,4 @@
 return function()
-	-- Here is where you configure the autocompletion settings.
-	local lsp_zero = require("lsp-zero")
-	lsp_zero.extend_cmp()
-
-	-- And you can configure cmp even more, if you want to.
 	local cmp = require("cmp")
 	local lspkind = require("lspkind")
 
@@ -19,9 +14,11 @@ return function()
 		sources = {
 			{ name = "copilot" },
 			{ name = "nvim_lsp" },
-      { name = "path", option = { label_trailing_slash = true } }, -- Allow trailing slashes
+      { name = "path", option = { label_trailing_slash = true } },
 			{ name = "luasnip" },
 		},
+		
+		capabilities = require("cmp_nvim_lsp").default_capabilities(),
 
 		formatting = {
 			format = lspkind.cmp_format({

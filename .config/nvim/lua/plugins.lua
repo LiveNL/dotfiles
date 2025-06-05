@@ -79,19 +79,6 @@ lazy.setup({
 	-- https://github.com/onsails/lspkind.nvim
 	"onsails/lspkind.nvim",
 
-	-- A starting point to setup some lsp related features in neovim.
-	-- https://github.com/VonHeikemen/lsp-zero.nvim/blob/v3.x/doc/md/guides/lazy-loading-with-lazy-nvim.md
-	{
-		"VonHeikemen/lsp-zero.nvim",
-		branch = "v3.x",
-		lazy = true,
-		config = require("plugins.lsp-starting-point"),
-		init = function()
-			-- Disable automatic setup, we are doing it manually
-			vim.g.lsp_zero_extend_cmp = 0
-			vim.g.lsp_zero_extend_lspconfig = 0
-		end,
-	},
 
 	{
 		"williamboman/mason.nvim",
