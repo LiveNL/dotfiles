@@ -110,11 +110,11 @@ return function()
   end
 
   lsp.basedpyright.setup({
-    root_dir = util.root_pattern("src", ".git", "pyproject.toml", "setup.py", "setup.cfg"),
+    root_dir = util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", ".git"),
     settings = {
       basedpyright = {
         analysis = {
-          autoSearchPaths = true,
+          autoSearchPaths = false,
           diagnosticMode = "openFilesOnly",
           useLibraryCodeForTypes = true,
           diagnosticSeverityOverrides = {
@@ -129,9 +129,9 @@ return function()
       }
     },
     before_init = function(_, config)
-      local python_path = get_python_path()
+      local python_path = get_python_path(config.root_dir)
       config.settings.python.pythonPath = python_path
-      vim.notify(python_path)
+      vim.notify("Python: " .. python_path .. " | Root: " .. config.root_dir)
     end,
   })
 
