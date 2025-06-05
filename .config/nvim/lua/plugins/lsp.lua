@@ -15,6 +15,7 @@ return function()
       "lua_ls",
     },
     automatic_installation = true,
+    automatic_enable = false,
     handlers = {
       function(server_name)
         local explicitly_configured = {
