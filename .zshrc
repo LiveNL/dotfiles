@@ -90,7 +90,6 @@ export PYTHONPATH="$PWD"
 export PYTHONPATH="$PYTHONPATH:$RESOLVE_SCRIPT_API/Modules/"
 export MYPYPATH="$PYTHONPATH"
 
-export ANTHROPIC_API_KEY=$(cat ~/.antropic_api_key)
 export OPENAI_API_KEY=$(cat ~/.openai_api_key)
 
 if command -v pyenv 1>/dev/null 2>&1; then
