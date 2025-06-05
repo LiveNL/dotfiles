@@ -173,14 +173,13 @@ lazy.setup({
 		},
 	},
 	-- Nvim-Tree - File Explorer For Neovim Written In Lua
-	-- https://github.com/kyazdani42/nvim-tree.lua
+	-- https://github.com/nvim-tree/nvim-tree.lua
 	{
-		"kyazdani42/nvim-tree.lua",
+		"nvim-tree/nvim-tree.lua",
 		dependencies = {
-			"kyazdani42/nvim-web-devicons", -- optional, for file icons
+			"nvim-tree/nvim-web-devicons", -- optional, for file icons
 			"elihunter173/dirbuf.nvim",
 		},
-		tag = "nightly", -- optional, updated every week. (see issue #1193)
 		config = require("plugins.nvim-tree"),
 	},
 
@@ -281,9 +280,9 @@ lazy.setup({
 	},
 
 	-- The fastest Neovim colorizer.
-	-- https://github.com/norcalli/nvim-colorizer.lua
+	-- https://github.com/NvChad/nvim-colorizer.lua
 	{
-		"norcalli/nvim-colorizer.lua",
+		"NvChad/nvim-colorizer.lua",
 		config = function()
 			require("colorizer").setup()
 		end,
