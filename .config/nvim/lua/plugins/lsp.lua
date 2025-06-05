@@ -15,7 +15,17 @@ return function()
       "lua_ls",
     },
     automatic_installation = true,
-    automatic_enable = false,
+    automatic_enable = {
+        exclude = {
+          "eslint",
+          "ts_ls",
+          "svelte",
+          "basedpyright",
+          "jsonls",
+          "ruff",
+          "lua_ls",
+        }
+    },
     handlers = {
       function(server_name)
         local explicitly_configured = {
