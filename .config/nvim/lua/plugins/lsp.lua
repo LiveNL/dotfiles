@@ -17,7 +17,19 @@ return function()
     automatic_installation = true,
     handlers = {
       function(server_name)
-        require("lspconfig")[server_name].setup({})
+        local explicitly_configured = {
+          basedpyright = true,
+          ruff = true,
+          svelte = true,
+          ts_ls = true,
+          eslint = true,
+          jsonls = true,
+          lua_ls = true,
+        }
+
+        if not explicitly_configured[server_name] then
+          require("lspconfig")[server_name].setup({})
+        end
       end,
     },
   })
@@ -133,7 +145,7 @@ return function()
   })
 
   local capabilities = require("cmp_nvim_lsp").default_capabilities()
-  
+
   lsp.ts_ls.setup({
     capabilities = capabilities,
     on_attach = function(client, bufnr)
