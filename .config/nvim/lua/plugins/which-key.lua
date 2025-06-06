@@ -8,8 +8,43 @@ end, {})
 
 return function()
 	local wk = require("which-key")
-	local Util = require("lazyvim.util")
 	local conceallevel = vim.o.conceallevel > 0 and vim.o.conceallevel or 3
+
+	-- Custom toggle functions to replace LazyVim utilities
+	local function toggle_option(option)
+		if option == "conceallevel" then
+			local current = vim.o.conceallevel
+			vim.opt.conceallevel = current == 0 and conceallevel or 0
+		else
+			vim.opt[option] = not vim.opt[option]:get()
+		end
+	end
+
+	local function toggle_diagnostics()
+		local current_config = vim.diagnostic.config()
+		if current_config and current_config.virtual_text == false and current_config.signs == false then
+			vim.diagnostic.config({ virtual_text = true, signs = true })
+		else
+			vim.diagnostic.config({ virtual_text = false, signs = false })
+		end
+	end
+
+	local function toggle_number()
+		if vim.opt.relativenumber:get() then
+			vim.opt.relativenumber = false
+		else
+			vim.opt.relativenumber = true
+		end
+	end
+
+	local function toggle_inlay_hints()
+		local bufnr = vim.api.nvim_get_current_buf()
+		if vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }) then
+			vim.lsp.inlay_hint.enable(false, { bufnr = bufnr })
+		else
+			vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+		end
+	end
 
 	wk.setup({
 		plugins = { spelling = true },
@@ -123,7 +158,7 @@ return function()
 		{
 			"<leader>uF",
 			function()
-				Util.format.toggle(true)
+				-- Toggle auto format for buffer (placeholder)
 			end,
 			desc = "Toggle auto format (buffer)",
 		},
@@ -131,7 +166,7 @@ return function()
 		{
 			"<leader>uL",
 			function()
-				Util.toggle("relativenumber")
+				toggle_option("relativenumber")
 			end,
 			desc = "Toggle Relative Line Numbers",
 		},
@@ -150,7 +185,7 @@ return function()
 		{
 			"<leader>uc",
 			function()
-				Util.toggle("conceallevel", false, { 0, conceallevel })
+				toggle_option("conceallevel")
 			end,
 			desc = "Toggle Conceal",
 		},
@@ -158,7 +193,7 @@ return function()
 		{
 			"<leader>ud",
 			function()
-				Util.toggle.diagnostics()
+				toggle_diagnostics()
 			end,
 			desc = "Toggle Diagnostics",
 		},
@@ -166,7 +201,7 @@ return function()
 		{
 			"<leader>uf",
 			function()
-				Util.format.toggle()
+				-- Toggle auto format globally (placeholder)
 			end,
 			desc = "Toggle auto format (global)",
 		},
@@ -174,7 +209,7 @@ return function()
 		{
 			"<leader>uh",
 			function()
-				vim.lsp.inlay_hint(0, nil)
+				toggle_inlay_hints()
 			end,
 			desc = "Toggle Inlay Hints",
 		},
@@ -182,7 +217,7 @@ return function()
 		{
 			"<leader>ul",
 			function()
-				Util.toggle.number()
+				toggle_number()
 			end,
 			desc = "Toggle Line Numbers",
 		},
@@ -190,7 +225,7 @@ return function()
 		{
 			"<leader>us",
 			function()
-				Util.toggle("spell")
+				toggle_option("spell")
 			end,
 			desc = "Toggle Spelling",
 		},
@@ -198,7 +233,7 @@ return function()
 		{
 			"<leader>uw",
 			function()
-				Util.toggle("wrap")
+				toggle_option("wrap")
 			end,
 			desc = "Toggle Word Wrap",
 		},
