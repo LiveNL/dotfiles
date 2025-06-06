@@ -69,8 +69,28 @@ require("mini.starter").setup({
 vim.api.nvim_create_autocmd("User", {
 	pattern = "MiniStarterOpened",
 	callback = function()
+		local starter_bufnr = vim.api.nvim_get_current_buf()
+
 		vim.defer_fn(function()
 			require("nvim-tree.api").tree.open()
+			-- Return focus to ministarter
+			vim.defer_fn(function()
+				for _, win in ipairs(vim.api.nvim_list_wins()) do
+					if vim.api.nvim_win_get_buf(win) == starter_bufnr then
+						vim.api.nvim_set_current_win(win)
+						break
+					end
+				end
+			end, 50)
 		end, 10)
+
+		-- Fix :Ex command in ministarter
+		vim.api.nvim_buf_create_user_command(starter_bufnr, "Ex", function(opts)
+			if opts.args and opts.args ~= "" then
+				vim.cmd("Explore " .. opts.args)
+			else
+				vim.cmd("Explore .")
+			end
+		end, { nargs = "?" })
 	end,
 })

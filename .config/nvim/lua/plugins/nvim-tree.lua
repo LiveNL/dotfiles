@@ -3,6 +3,8 @@ return function()
 	require("nvim-tree").setup({
 		sort_by = "case_sensitive",
 		hijack_directories = { enable = false },
+		disable_netrw = false,
+		hijack_netrw = false,
 		view = {
 			adaptive_size = true,
 		},
