@@ -5,17 +5,23 @@ return function()
 		hijack_directories = { enable = false },
 		view = {
 			adaptive_size = true,
-			mappings = {
-				list = {
-					{ key = "u", action = "dir_up" },
-				},
-			},
 		},
 		renderer = {
 			group_empty = true,
 		},
 		filters = {
-			dotfiles = true,
+			dotfiles = false,
+			git_ignored = false,
 		},
+		on_attach = function(bufnr)
+			local api = require("nvim-tree.api")
+
+			-- Default mappings
+			api.config.mappings.default_on_attach(bufnr)
+
+			-- Custom mappings
+			local opts = { buffer = bufnr, noremap = true, silent = true, nowait = true }
+			vim.keymap.set('n', 'u', api.tree.change_root_to_parent, opts)
+		end,
 	})
 end

@@ -65,3 +65,12 @@ require("mini.starter").setup({
 	-- Whether to disable showing non-error feedback
 	silent = false,
 })
+
+vim.api.nvim_create_autocmd("User", {
+	pattern = "MiniStarterOpened",
+	callback = function()
+		vim.defer_fn(function()
+			require("nvim-tree.api").tree.open()
+		end, 10)
+	end,
+})
