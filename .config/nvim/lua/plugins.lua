@@ -157,6 +157,16 @@ lazy.setup({
 	-- https://github.com/akinsho/git-conflict.nvim
 	{ "akinsho/git-conflict.nvim", version = "*", config = true },
 
+  {
+    "sindrets/diffview.nvim",
+    dependencies = "nvim-lua/plenary.nvim",
+    config = true,
+    keys = {
+      { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "Open Diffview" },
+      { "<leader>gD", "<cmd>DiffviewFileHistory<cr>", desc = "File History" },
+    },
+  },
+
 	-- Plugin for calling lazygit from within neovim.
 	-- https://github.com/kdheepak/lazygit.nvim
 	{
