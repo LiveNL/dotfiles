@@ -18,9 +18,13 @@ end
 
 augroup("test_coverage_show")(function(autocmd)
 	autocmd({ "FileType" }, { pattern = "python" }, function()
-		local file_exists = io.open(".coverage", "r") ~= nil
+		local python_root = vim.fn.fnamemodify(vim.fn.findfile("pyproject.toml", ".;") or vim.fn.findfile("setup.py", ".;") or vim.fn.getcwd(), ":p:h")
+		local coverage_path = python_root .. "/.coverage"
+		local file_exists = io.open(coverage_path, "r") ~= nil
 		if file_exists and vim.g.coverage_loaded == 0 then
+			vim.cmd("cd " .. python_root)
 			require("coverage").load(true)
+			vim.g.coverage_loaded = 1
 		end
 	end)
 end)
