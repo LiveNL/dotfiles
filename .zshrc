@@ -88,6 +88,7 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 export PYTHONPATH="$PWD"
 export PYTHONPATH="$PYTHONPATH:$RESOLVE_SCRIPT_API/Modules/"
+export PYTHONPATH="$PYTHONPATH:$PWD/backend/"
 export MYPYPATH="$PYTHONPATH"
 
 export OPENAI_API_KEY=$(cat ~/.openai_api_key)
@@ -109,4 +110,3 @@ ulimit -n 4096
 export PATH=~/.npm-global/bin:$PATH
 alias dig="/opt/homebrew/bin/dig"
 export PATH="$HOME/.npm-global/bin:$PATH"
-alias claude="/Users/livenl/.claude/local/claude"
