@@ -69,12 +69,12 @@
             "selected": true,
             "simple_modifications": [
                 {
-                    "from": { "key_code": "f4" },
-                    "to": [{ "apple_vendor_keyboard_key_code": "launchpad" }]
-                },
-                {
                     "from": { "key_code": "caps_lock" },
                     "to": [{ "key_code": "left_control" }]
+                },
+                {
+                    "from": { "key_code": "f4" },
+                    "to": [{ "apple_vendor_keyboard_key_code": "launchpad" }]
                 }
             ],
             "virtual_hid_keyboard": {
