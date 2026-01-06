@@ -105,8 +105,12 @@ export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
 export PATH="/opt/homebrew/bin:$PATH"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+set rtp+=/opt/homebrew/opt/fzf
 
 ulimit -n 4096
 export PATH=~/.npm-global/bin:$PATH
 alias dig="/opt/homebrew/bin/dig"
 export PATH="$HOME/.npm-global/bin:$PATH"
+
+# Added by Antigravity
+export PATH="/Users/livenl/.antigravity/antigravity/bin:$PATH"
