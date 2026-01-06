@@ -1,8 +1,4 @@
 return function()
-  local lsp = require("lspconfig")
-  local util = require("lspconfig/util")
-  local path = util.path
-
   require("mason").setup()
   require("mason-lspconfig").setup({
     ensure_installed = {
@@ -15,49 +11,31 @@ return function()
       "lua_ls",
     },
     automatic_installation = true,
-    automatic_enable = {
-        exclude = {
-          "eslint",
-          "ts_ls",
-          "svelte",
-          "basedpyright",
-          "jsonls",
-          "ruff",
-          "lua_ls",
-        }
-    },
-    handlers = {
-      function(server_name)
-        local explicitly_configured = {
-          basedpyright = true,
-          ruff = true,
-          svelte = true,
-          ts_ls = true,
-          eslint = true,
-          jsonls = true,
-          lua_ls = true,
-        }
-
-        if not explicitly_configured[server_name] then
-          require("lspconfig")[server_name].setup({})
-        end
-      end,
-    },
+    automatic_enable = false,
   })
 
-  local lsp_flags = {
-    debounce_text_changes = 150,
-  }
+  local function get_python_path(workspace)
+    if vim.env.VIRTUAL_ENV then
+      return vim.env.VIRTUAL_ENV .. "/bin/python"
+    end
+
+    for _, pattern in ipairs({ "*", ".*" }) do
+      local match = vim.fn.glob(workspace .. "/" .. pattern .. "/pyvenv.cfg") or ""
+      if match ~= "" and match ~= nil then
+        return vim.fn.fnamemodify(match, ":h") .. "/bin/python"
+      end
+    end
+
+    return vim.fn.exepath("python3") or vim.fn.exepath("python") or "python"
+  end
 
   local on_attach = function(client, bufnr)
     if client.server_capabilities.inlayHintProvider then
-      if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint) == "function" then
-        vim.lsp.inlay_hint(bufnr, true)
-      elseif vim.lsp.inlay_hint and type(vim.lsp.inlay_hint) == "table" and vim.lsp.inlay_hint.enable then
+      if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint) == "table" and vim.lsp.inlay_hint.enable then
         vim.lsp.inlay_hint.enable(true)
       end
     end
-    vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
+    vim.api.nvim_set_option_value("omnifunc", "v:lua.vim.lsp.omnifunc", { buf = bufnr })
 
     local bufopts = { noremap = true, silent = true, buffer = bufnr }
 
@@ -94,23 +72,10 @@ return function()
     vim.keymap.set("v", "<leader>F", vim.lsp.buf.format, bufopts)
   end
 
-  local function get_python_path(workspace)
-    if vim.env.VIRTUAL_ENV then
-      return path.join(vim.env.VIRTUAL_ENV, "bin", "python")
-    end
+  local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-    for _, pattern in ipairs({ "*", ".*" }) do
-      local match = vim.fn.glob(path.join(workspace, pattern, "pyvenv.cfg")) or ""
-      if match ~= "" and match ~= nil then
-        return path.join(path.dirname(match), "bin", "python")
-      end
-    end
-
-    return vim.fn.exepath("python3") or vim.fn.exepath("python") or "python"
-  end
-
-  lsp.basedpyright.setup({
-    root_dir = util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", ".git"),
+  vim.lsp.config("basedpyright", {
+    root_markers = { "pyproject.toml", "setup.py", "setup.cfg", ".git" },
     settings = {
       basedpyright = {
         analysis = {
@@ -120,12 +85,10 @@ return function()
           diagnosticSeverityOverrides = {
             reportUnusedCallResult = false
           },
-
         },
       },
       python = {
-        analysis = {
-        },
+        analysis = {},
       }
     },
     before_init = function(_, config)
@@ -135,8 +98,7 @@ return function()
     end,
   })
 
-
-  lsp.svelte.setup({
+  vim.lsp.config("svelte", {
     filetypes = { "svelte", "html", "css" },
     on_attach = function(client, bufnr)
       vim.api.nvim_create_autocmd("BufWritePre", {
@@ -155,9 +117,7 @@ return function()
     },
   })
 
-  local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
-  lsp.ts_ls.setup({
+  vim.lsp.config("ts_ls", {
     capabilities = capabilities,
     on_attach = function(client, bufnr)
       client.server_capabilities.documentFormattingProvider = false
@@ -177,7 +137,7 @@ return function()
     }
   })
 
-  lsp.eslint.setup({
+  vim.lsp.config("eslint", {
     on_attach = function(client, bufnr)
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = bufnr,
@@ -204,7 +164,7 @@ return function()
     }
   })
 
-  lsp.ruff.setup({
+  vim.lsp.config("ruff", {
     on_attach = function(client, bufnr)
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = bufnr,
@@ -224,7 +184,7 @@ return function()
     },
   })
 
-  lsp.jsonls.setup({
+  vim.lsp.config("jsonls", {
     settings = {
       json = {
         schemas = require("schemastore").json.schemas(),
@@ -232,14 +192,11 @@ return function()
       },
     },
     on_attach = function(client, bufnr)
-      local function buf_set_option(...)
-        vim.api.nvim_buf_set_option(bufnr, ...)
-      end
-      buf_set_option("omnifunc", "v:lua.vim.lsp.omnifunc")
+      vim.api.nvim_set_option_value("omnifunc", "v:lua.vim.lsp.omnifunc", { buf = bufnr })
     end,
   })
 
-  lsp.lua_ls.setup({
+  vim.lsp.config("lua_ls", {
     on_attach = on_attach,
     settings = {
       Lua = {
@@ -258,6 +215,16 @@ return function()
         },
       },
     },
+  })
+
+  vim.lsp.enable({
+    "basedpyright",
+    "svelte",
+    "ts_ls",
+    "eslint",
+    "ruff",
+    "jsonls",
+    "lua_ls",
   })
 
   vim.fn.sign_define("DiagnosticSignError", { text = "E", texthl = "DiagnosticSignError" })
