@@ -14,8 +14,6 @@ vim.opt.rtp:prepend(lazypath)
 local lazy = require("lazy")
 
 lazy.setup({
-	{ "LazyVim/LazyVim", version = false },
-
 	checker = { enabled = true },
 
 	-- "https://github.com/kyazdani43/nvim-web-devicons.git"
