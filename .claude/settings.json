@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "statusLine": {
+    "type": "command",
+    "command": "/Users/livenl/.claude/statusline.sh"
+  },
+  "feedbackSurveyState": {
+    "lastShownTime": 1759942275284
+  },
+  "model": "opus"
+}
