@@ -265,8 +265,8 @@ lazy.setup({
 		},
 	},
 
-	-- Describe the regexp under the cursor
-	-- https://github.com/bennypowers/nvim-regexplainer
+	{ "MunifTanjim/nui.nvim", lazy = true },
+
 	{
 		"bennypowers/nvim-regexplainer",
 		config = function()
