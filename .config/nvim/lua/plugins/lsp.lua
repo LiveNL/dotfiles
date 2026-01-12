@@ -248,5 +248,9 @@ return function()
   })
 
   vim.o.updatetime = 300
-  vim.cmd([[autocmd CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})]])
+  vim.api.nvim_create_autocmd({ "CursorHold" }, {
+    callback = function()
+      vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
+    end,
+  })
 end
