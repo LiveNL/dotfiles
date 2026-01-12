@@ -3,7 +3,7 @@ return function()
   require("mason-lspconfig").setup({
     ensure_installed = {
       "eslint",
-      "ts_ls",
+      "vtsls",
       "svelte",
       "basedpyright",
       "jsonls",
@@ -117,8 +117,10 @@ return function()
     },
   })
 
-  vim.lsp.config("ts_ls", {
+  vim.lsp.config("vtsls", {
     capabilities = capabilities,
+    filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+    root_markers = { "tsconfig.json", "jsconfig.json", "package.json" },
     on_attach = function(client, bufnr)
       client.server_capabilities.documentFormattingProvider = false
       on_attach(client, bufnr)
@@ -138,6 +140,8 @@ return function()
   })
 
   vim.lsp.config("eslint", {
+    filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "svelte" },
+    root_markers = { "eslint.config.js", "eslint.config.mjs", ".eslintrc.js", ".eslintrc.json", ".eslintrc" },
     on_attach = function(client, bufnr)
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = bufnr,
@@ -220,7 +224,7 @@ return function()
   vim.lsp.enable({
     "basedpyright",
     "svelte",
-    "ts_ls",
+    "vtsls",
     "eslint",
     "ruff",
     "jsonls",
