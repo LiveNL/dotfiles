@@ -6,7 +6,7 @@ input=$(cat)
 # Parse JSON fields
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // empty')
 vim_mode=$(echo "$input" | jq -r '.vim.mode // empty')
-remaining=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
+used=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 model=$(echo "$input" | jq -r '.model.display_name // empty')
 cost=$(echo "$input" | jq -r '.cost.total_cost_usd // "0"')
 
@@ -49,11 +49,11 @@ if [ -n "$cost" ] && [ "$cost" != "null" ] && [ "$cost" != "0" ]; then
     out+="${s}${_dim}${cf}${R}"
 fi
 
-# ── Context dots ──
-if [ -n "$remaining" ] && [ "$remaining" != "null" ]; then
-    ci=${remaining%.*}
+# ── Context dots (used) ──
+if [ -n "$used" ] && [ "$used" != "null" ]; then
+    ci=${used%.*}
     [ -z "$ci" ] && ci=0
-    cc=$_green; [ "$ci" -lt 50 ] && cc=$_yellow; [ "$ci" -lt 20 ] && cc=$_red
+    cc=$_green; [ "$ci" -gt 50 ] && cc=$_yellow; [ "$ci" -gt 80 ] && cc=$_red
     f=$((ci / 10)); e=$((10 - f))
     bar=""
     for ((i=0; i<f; i++)); do bar+="●"; done
