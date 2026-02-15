@@ -57,10 +57,28 @@ lazy.setup({
 
 	{
 		"zbirenbaum/copilot.lua",
+		cmd = "Copilot",
+		event = "VeryLazy",
 		config = function()
 			require("copilot").setup({
 				suggestion = { enabled = false },
 				panel = { enabled = false },
+				filetypes = {
+					markdown = false,
+					help = false,
+					gitcommit = false,
+					gitrebase = false,
+					text = false,
+					["*"] = true,
+				},
+				copilot_node_command = "node",
+				server_opts_overrides = {
+					settings = {
+						advanced = {
+							inlineSuggestCount = 3,
+						},
+					},
+				},
 			})
 		end,
 		dependencies = {
