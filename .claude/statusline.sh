@@ -58,7 +58,13 @@ if [ -n "$used" ] && [ "$used" != "null" ]; then
     bar=""
     for ((i=0; i<f; i++)); do bar+="●"; done
     for ((i=0; i<e; i++)); do bar+="○"; done
-    out+="${s}${cc}${bar}${R} ${_dim}${ci}%${R}"
+    tokens=$(echo "$input" | jq -r '.context_window.current_usage.input_tokens // empty')
+    cap=$(echo "$input" | jq -r '.context_window.context_window_size // empty')
+    tk=""
+    if [ -n "$tokens" ] && [ "$tokens" != "null" ] && [ -n "$cap" ] && [ "$cap" != "null" ]; then
+        tk=" $(awk "BEGIN{printf \"%.0fk/%.0fk\", $tokens/1000, $cap/1000}")"
+    fi
+    out+="${s}${cc}${bar}${R} ${_dim}${ci}%${tk}${R}"
 fi
 
 printf '%b' "$out"

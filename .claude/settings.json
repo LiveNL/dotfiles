@@ -1,17 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "model": "opus",
-  "enabledPlugins": {
-    "pyright-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true
-  },
-  "feedbackSurveyState": {
-    "lastShownTime": 1759942275284
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/statusline.sh"
-  },
   "hooks": {
     "SessionStart": [
       {
@@ -46,16 +35,38 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/busy-window.sh"
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/reset-window.sh"
+            "command": "bash ~/.claude/hooks/busy-window.sh"
           }
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "pyright-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "feedbackSurveyState": {
+    "lastShownTime": 1759942275284
   }
 }

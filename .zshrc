@@ -114,3 +114,7 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 
 # Added by Antigravity
 export PATH="/Users/livenl/.antigravity/antigravity/bin:$PATH"
+
+# Claude Code account switching
+alias claude-work="CLAUDE_CONFIG_DIR=~/.claude-work command claude"
+alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal command claude"

@@ -8,14 +8,20 @@ color = "0xcb7985"
 index = 17
 
 [colors.bright]
-black = "0x4e5157"
-blue = "0x73a3b7"
-cyan = "0xafd4de"
-green = "0x8eb2af"
+# black = "0x4e5157"
+# blue = "0x73a3b7"
+# cyan = "0xafd4de"
+# green = "0x8eb2af"
 magenta = "0xb97490"
 red = "0xeb746b"
-white = "0xeeeeee"
+# white = "0xeeeeee"
 yellow = "0xfdb292"
+
+black = "0x6b7089"    # comments/dimmed text — more visible
+blue = "0x82b8cc"     # code/links — brighter
+cyan = "0xb8dfe8"     # inline code — more contrast
+green = "0xa3cbc8"    # code blocks — pops more
+white = "0xf5f5f5"    # main text — crisper
 
 [colors.normal]
 black = "0x2f3239"
@@ -43,7 +49,8 @@ print_events = false
 render_timer = false
 
 [env]
-TERM = "alacritty"
+TERM = "xterm-256color"
+# TERM = "alacritty"
 
 [font]
 size = 9
@@ -58,7 +65,7 @@ style = "Book"
 
 [font.offset]
 x = 0
-y = 0
+y = 2
 
 [mouse]
 hide_when_typing = true
@@ -80,9 +87,13 @@ startup_mode = "Windowed"
 columns = 140
 lines = 40
 
+# [window.padding]
+# x = 0
+# y = 0
+
 [window.padding]
-x = 0
-y = 0
+x = 8
+y = 6
 
 [general]
 live_config_reload = true
