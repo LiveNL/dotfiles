@@ -92,6 +92,7 @@ export PYTHONPATH="$PYTHONPATH:$PWD/backend/"
 export MYPYPATH="$PYTHONPATH"
 
 export OPENAI_API_KEY=$(cat ~/.openai_api_key)
+export ANTHROPIC_API_KEY=$(cat ~/.anthropic_api_key)
 
 if command -v pyenv 1>/dev/null 2>&1; then
   eval "$(pyenv init -)"
