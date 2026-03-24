@@ -1,4 +1,6 @@
 #!/bin/bash
+# Fired on Stop and Notification events.
+# Updates the tmux window state and sends a desktop notification (macOS only).
 
 NOTIFIER_INPUT=$(cat)
 MESSAGE=$(echo "$NOTIFIER_INPUT" | jq -r '.message // empty')
@@ -15,6 +17,12 @@ fi
 REPO_NAME=$(basename "$(pwd)")
 SUBTITLE="${TMUX_WINDOW:+$TMUX_WINDOW · }$REPO_NAME"
 
+# macOS notifications (no-op on other platforms)
+CAN_NOTIFY="0"
+if [ "$(uname)" = "Darwin" ] && command -v osascript >/dev/null 2>&1; then
+    CAN_NOTIFY="1"
+fi
+
 set_state() {
     if [ -n "$TMUX" ]; then
         tmux set-option -w -t "$TMUX_PANE" @claude-state "$1"
@@ -23,12 +31,12 @@ set_state() {
 }
 
 notify_macos() {
+    [ "$CAN_NOTIFY" = "1" ] || return 0
     local title="$1" msg="$2" sound="$3"
     osascript -e "display notification \"$(echo "$msg" | head -c 100)\" with title \"$title\" subtitle \"$SUBTITLE\" sound name \"$sound\""
 }
 
 if [ "$EVENT" = "Stop" ]; then
-    # If last message ends with '?' Claude is asking for input, otherwise it's done
     PREVIEW=$(echo "$LAST_MSG" | tr '\n' ' ' | tail -c 120)
     if echo "$LAST_MSG" | grep -q '?$'; then
         set_state "input"
