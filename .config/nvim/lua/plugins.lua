@@ -34,13 +34,58 @@ lazy.setup({
 
 	{ "f-person/git-blame.nvim" },
 
-	-- This plugin adds horizontal highlights for text like markdown etc.
-	-- https://github.com/lukas-reineke/headlines.nvim
+	-- In-buffer markdown rendering (headings, code blocks, tables, checkboxes, callouts…)
+	-- https://github.com/MeanderingProgrammer/render-markdown.nvim
 	{
-		"lukas-reineke/headlines.nvim",
-		dependencies = "nvim-treesitter/nvim-treesitter",
-		ft = { "org", "norg", "markdown", "yaml" },
-		config = require("plugins.headlines"),
+		"MeanderingProgrammer/render-markdown.nvim",
+		dependencies = {
+			"nvim-treesitter/nvim-treesitter",
+			"nvim-tree/nvim-web-devicons",
+		},
+		ft = { "markdown" },
+		config = require("plugins.render-markdown"),
+	},
+
+	-- Center buffer content with side padding (used for markdown reading/writing)
+	-- https://github.com/shortcuts/no-neck-pain.nvim
+	{
+		"shortcuts/no-neck-pain.nvim",
+		version = "*",
+		ft = { "markdown" },
+		config = function()
+			local nnp = require("no-neck-pain")
+
+			local function enable()
+				local width = math.max(100, math.floor(vim.o.columns * 0.8))
+				nnp.setup({
+					width = width,
+					buffers = {
+						scratchPad = { enabled = false },
+						wo = { fillchars = "eob: " },
+					},
+				})
+				nnp.enable()
+			end
+
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = "markdown",
+				callback = enable,
+			})
+
+			-- Plugin loaded lazily on ft=markdown, so the FileType event already
+			-- fired — enable immediately for the current buffer.
+			if vim.bo.filetype == "markdown" then
+				enable()
+			end
+
+			vim.api.nvim_create_autocmd("VimResized", {
+				callback = function()
+					if vim.bo.filetype == "markdown" then
+						enable()
+					end
+				end,
+			})
+		end,
 	},
 
 	-- Nvim Treesitter configurations and abstraction layer
