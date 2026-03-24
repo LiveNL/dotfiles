@@ -65,6 +65,7 @@
     "pyright-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
+  "effortLevel": "high",
   "feedbackSurveyState": {
     "lastShownTime": 1759942275284
   }

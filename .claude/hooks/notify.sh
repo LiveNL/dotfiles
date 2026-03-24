@@ -29,13 +29,17 @@ notify_macos() {
 
 if [ "$EVENT" = "Stop" ]; then
     # If last message ends with '?' Claude is asking for input, otherwise it's done
+    PREVIEW=$(echo "$LAST_MSG" | tr '\n' ' ' | tail -c 120)
     if echo "$LAST_MSG" | grep -q '?$'; then
         set_state "input"
+        if [ "$IS_ACTIVE" != "1" ]; then
+            notify_macos "❓ Question" "${PREVIEW:-Claude needs your input}" "Pop"
+        fi
     else
         set_state "done"
-    fi
-    if [ "$IS_ACTIVE" != "1" ]; then
-        notify_macos "✅ Done" "Ready for review" "Glass"
+        if [ "$IS_ACTIVE" != "1" ]; then
+            notify_macos "✅ Done" "${PREVIEW:-Ready for review}" "Glass"
+        fi
     fi
 elif [ "$EVENT" = "Notification" ]; then
     if echo "$MESSAGE" | grep -qi "permission"; then
