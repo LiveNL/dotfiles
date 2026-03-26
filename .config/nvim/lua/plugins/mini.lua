@@ -27,6 +27,8 @@ local header = get_header({
 	headers.efficientLines,
 })
 
+require("mini.align").setup()
+
 require("mini.starter").setup({
 	-- Whether to open starter buffer on VimEnter. Not opened if Neovim was
 	-- started with intent to show something else.

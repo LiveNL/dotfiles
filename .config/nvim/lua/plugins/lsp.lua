@@ -175,6 +175,7 @@ return function()
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = bufnr,
         callback = function()
+          vim.lsp.buf.format({ bufnr = bufnr })
           vim.lsp.buf.code_action({
             context = { only = { "source.organizeImports" } },
             apply = true,

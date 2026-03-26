@@ -29,35 +29,9 @@ augroup("test_coverage_show")(function(autocmd)
 	end)
 end)
 
-augroup("refresh")(function(autocmd)
-	autocmd({ "BufWritePost" }, { pattern = "*.py" }, function()
-		pcall(LspRestart)
-	end)
-end)
-
 augroup("cleanup")(function(autocmd)
 	autocmd({ "BufWritePre" }, { pattern = "*[^.md]" }, [[%s/\s\+$//e]])
 end)
-
-function get_file_name(file)
-	return file:match("^.+/(.+)$")
-end
-
-augroup("luaupdates")(function(autocmd)
-	autocmd({ "BufWritePost" }, { pattern = "*.lua" }, function()
-		pcall(PackerCompile)
-	end)
-end)
-
-augroup("RuffFormatOnSave")(function(autocmd)
-	autocmd({ "BufWritePost" }, { pattern = "*.py" }, function()
-    vim.fn.system({"ruff", "format", vim.fn.expand("%:p")})
-		vim.fn.system({"ruff", "--select", "I", "--fix", vim.fn.expand("%:p")})
-    vim.fn.system({"ruff", "--fix", vim.fn.expand("%:p")})
-    vim.cmd("checktime")
-	end)
-end)
-
 
 local function format_json()
 	local start_line = vim.fn.getpos("'<")[2]
