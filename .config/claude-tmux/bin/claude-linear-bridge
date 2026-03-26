@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+COMMAND_FILE="$1"
+SESSION="${CLAUDE_TMUX_SESSION:-claude}"
+
+if [[ ! -f "$COMMAND_FILE" ]]; then
+    exit 1
+fi
+
+CONTENT=$(cat "$COMMAND_FILE")
+
+# Extract issue ID
+ISSUE_ID=$(echo "$CONTENT" | grep -oE '[A-Z]+-[0-9]+' | head -1)
+if [[ -z "$ISSUE_ID" ]]; then
+    ISSUE_ID="linear-$(date +%s)"
+fi
+
+TAB_NAME="cc:${ISSUE_ID}"
+
+# Take the original .command content and inject -w flag
+# Turns: claude 'prompt...'
+# Into:  claude -w 'ISSUE_ID' 'prompt...'
+LAUNCHER="/tmp/claude-launch-${ISSUE_ID}.sh"
+sed "s|claude '|claude -w '${ISSUE_ID}' '|" "$COMMAND_FILE" > "$LAUNCHER"
+chmod +x "$LAUNCHER"
+
+# Extract project dir for tmux window
+PROJECT_DIR=$(echo "$CONTENT" | sed -n "s/.*cd '\([^']*\)'.*/\1/p" | head -1)
+if [[ -z "$PROJECT_DIR" ]]; then
+    PROJECT_DIR="$HOME/projects/tsl/app"
+fi
+
+# Ensure tmux session exists
+if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "$SESSION" -c "$PROJECT_DIR" -n "$TAB_NAME"
+else
+    tmux new-window -t "$SESSION" -n "$TAB_NAME" -c "$PROJECT_DIR"
+fi
+
+tmux send-keys -t "$SESSION:$TAB_NAME" "bash '$LAUNCHER'" Enter
+
+open -a Alacritty 2>/dev/null || true
