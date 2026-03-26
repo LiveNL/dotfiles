@@ -32,8 +32,6 @@ lazy.setup({
 	-- https://github.com/lewis6991/gitsigns.nvim
 	{ "lewis6991/gitsigns.nvim", config = require("plugins.gitsigns") },
 
-	{ "f-person/git-blame.nvim" },
-
 	-- In-buffer markdown rendering (headings, code blocks, tables, checkboxes, callouts…)
 	-- https://github.com/MeanderingProgrammer/render-markdown.nvim
 	{
@@ -98,7 +96,6 @@ lazy.setup({
 	},
 
 	"nvim-treesitter/nvim-treesitter-context",
-	"nvim-treesitter/playground",
 
 	{
 		"zbirenbaum/copilot.lua",
@@ -154,9 +151,7 @@ lazy.setup({
 		dependencies = {
 			{ "L3MON4D3/LuaSnip", build = "make install_jsregexp" },
 			{ "rafamadriz/friendly-snippets" }, -- Optional
-			{ "hrsh7th/cmp-buffer" }, -- Optional
 			{ "hrsh7th/cmp-path" }, -- Optional
-			{ "hrsh7th/cmp-nvim-lua" }, -- Optional
 		},
 		config = require("plugins.lsp-autocompletion"),
 	},
@@ -178,15 +173,6 @@ lazy.setup({
 		config = require("plugins.lsp"),
 	},
 
-
-  {
-      "MysticalDevil/inlay-hints.nvim",
-      event = "LspAttach",
-      dependencies = { "neovim/nvim-lspconfig" },
-      config = function()
-          require("inlay-hints").setup()
-      end
-  },
 
 	-- show lsp status
 	-- https://github.com/j-hui/fidget.nvim
@@ -249,7 +235,6 @@ lazy.setup({
 		"nvim-tree/nvim-tree.lua",
 		dependencies = {
 			"nvim-tree/nvim-web-devicons", -- optional, for file icons
-			"elihunter173/dirbuf.nvim",
 		},
 		config = require("plugins.nvim-tree"),
 	},
@@ -276,17 +261,6 @@ lazy.setup({
 		config = require("plugins.telescope"),
 	},
 
-	-- Startup screen
-	-- https://github.com/goolord/alpha-nvim
-	{
-		"goolord/alpha-nvim",
-		dependencies = { "kyazdani42/nvim-web-devicons" },
-		-- event = "VimEnter",
-		enabled = false,
-		cond = vim.g.vscode == nil,
-		config = require("plugins.alpha-custom"),
-	},
-
 	{
 		"echasnovski/mini.nvim",
 		version = "*",
@@ -302,44 +276,10 @@ lazy.setup({
 	-- Custom keymaps + menu:
 	{ "folke/which-key.nvim", config = require("plugins.which-key") },
 
-  { "nvzone/volt" , lazy = true },
-  { "nvzone/menu" , lazy = true },
+  { "nvzone/menu", lazy = true, dependencies = { "nvzone/volt" } },
 
 	-- Smart and Powerful commenting plugin for neovim
 	{ "numToStr/Comment.nvim", opts = {}, lazy = false },
-
-	-- Alignment
-	{
-		"echasnovski/mini.align",
-		lazy = false,
-		version = "*",
-		config = function()
-			require("mini.align").setup()
-		end,
-	},
-
-	{
-		"folke/trouble.nvim",
-		dependencies = { "nvim-tree/nvim-web-devicons" },
-		opts = {
-			-- your configuration comes here
-			-- or leave it empty to use the default settings
-			-- refer to the configuration section below
-		},
-	},
-
-	{ "MunifTanjim/nui.nvim", lazy = true },
-
-	{
-		"bennypowers/nvim-regexplainer",
-		config = function()
-			require("regexplainer").setup()
-		end,
-		dependencies = {
-			"nvim-treesitter/nvim-treesitter",
-			"MunifTanjim/nui.nvim",
-		},
-	},
 
 	-- A powerful Neovim plugin that lets users choose & modify RGB/HSL/HEX colors.
 	-- https://github.com/ziontee113/color-picker.nvim
@@ -387,7 +327,7 @@ lazy.setup({
 		end,
 	},
 
-	{ "google/vim-searchindex", opt = true },
+	{ "google/vim-searchindex", lazy = true },
 
 	-- {
 	-- 	"yetone/avante.nvim",
