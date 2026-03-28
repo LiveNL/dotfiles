@@ -161,9 +161,6 @@ lazy.setup({
 
 	{
 		"neovim/nvim-lspconfig",
-		opts = {
-			inlay_hints = { enabled = true },
-		},
 		cmd = { "LspInfo", "LspInstall", "LspStart" },
 		event = { "BufReadPre", "BufNewFile" },
 		dependencies = {
