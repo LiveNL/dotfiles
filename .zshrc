@@ -116,6 +116,17 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 # Added by Antigravity
 export PATH="/Users/livenl/.antigravity/antigravity/bin:$PATH"
 
+git() {
+  local git_dir
+  git_dir=$(command git rev-parse --git-dir 2>/dev/null)
+  if [[ -n "$git_dir" && -f "$git_dir/index.lock" ]]; then
+    if ! pgrep -x git > /dev/null 2>&1; then
+      rm -f "$git_dir/index.lock"
+    fi
+  fi
+  command git "$@"
+}
+
 # Claude Code account switching
 alias claude-work="CLAUDE_CONFIG_DIR=~/.claude-work command claude"
 alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal command claude"
