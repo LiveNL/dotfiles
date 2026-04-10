@@ -120,7 +120,7 @@ git() {
   local git_dir
   git_dir=$(command git rev-parse --git-dir 2>/dev/null)
   if [[ -n "$git_dir" && -f "$git_dir/index.lock" ]]; then
-    if ! pgrep -x git > /dev/null 2>&1; then
+    if ! lsof "$git_dir/index.lock" > /dev/null 2>&1; then
       rm -f "$git_dir/index.lock"
     fi
   fi
