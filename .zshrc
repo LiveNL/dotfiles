@@ -40,6 +40,7 @@ alias 32key="uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]'"
 # requires pip install git+https://github.com/jeffkaufman/icdiff.git
 alias gdiff='git difftool --extcmd icdiff -y'
 alias linesofcode="git ls-files | xargs wc -l"
+alias dotfiles='cd ~/projects/dotfiles'
 
 function auto_pipenv_shell {
     if [ ! -n "${PIPENV_ACTIVE+1}" ]; then
