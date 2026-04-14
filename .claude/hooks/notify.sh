@@ -17,6 +17,14 @@ fi
 REPO_NAME=$(basename "$(pwd)")
 SUBTITLE="${TMUX_WINDOW:+$TMUX_WINDOW · }$REPO_NAME"
 
+# Strip markdown and take a clean preview from the start of a message
+preview() {
+    echo "$1" \
+        | tr '\n' ' ' \
+        | sed 's/\*\*//g; s/\*//g; s/__//g; s/`//g; s/  */ /g' \
+        | cut -c1-100
+}
+
 # macOS notifications (no-op on other platforms)
 CAN_NOTIFY="0"
 if [ "$(uname)" = "Darwin" ] && command -v osascript >/dev/null 2>&1; then
@@ -25,6 +33,11 @@ fi
 
 set_state() {
     if [ -n "$TMUX" ]; then
+        local PIDFILE="/tmp/claude-spinner-${TMUX_PANE#%}.pid"
+        if [ -f "$PIDFILE" ]; then
+            kill "$(cat "$PIDFILE")" 2>/dev/null
+            rm -f "$PIDFILE"
+        fi
         tmux set-option -w -t "$TMUX_PANE" @claude-state "$1"
         tmux refresh-client -S
     fi
@@ -33,11 +46,17 @@ set_state() {
 notify_macos() {
     [ "$CAN_NOTIFY" = "1" ] || return 0
     local title="$1" msg="$2" sound="$3"
-    osascript -e "display notification \"$(echo "$msg" | head -c 100)\" with title \"$title\" subtitle \"$SUBTITLE\" sound name \"$sound\""
+    osascript -e "display notification \"$msg\" with title \"$title\" subtitle \"$SUBTITLE\" sound name \"$sound\""
 }
 
+if [ -z "$EVENT" ]; then
+    # Could not parse hook input — reset to idle to avoid stuck state
+    set_state ""
+    exit 0
+fi
+
 if [ "$EVENT" = "Stop" ]; then
-    PREVIEW=$(echo "$LAST_MSG" | tr '\n' ' ' | tail -c 120)
+    PREVIEW=$(preview "$LAST_MSG")
     if echo "$LAST_MSG" | grep -q '?$'; then
         set_state "input"
         if [ "$IS_ACTIVE" != "1" ]; then
@@ -51,11 +70,13 @@ if [ "$EVENT" = "Stop" ]; then
     fi
 elif [ "$EVENT" = "Notification" ]; then
     if echo "$MESSAGE" | grep -qi "permission"; then
-        set_state "permission"
         CMD=$(echo "$MESSAGE" | sed 's/.*run: //' | head -c 80)
         notify_macos "🔑 Approval needed" "${CMD:-Needs your approval}" "Sosumi"
     else
-        set_state "input"
+        CURRENT_STATE=$(tmux display-message -t "$TMUX_PANE" -p '#{@claude-state}' 2>/dev/null)
+        if [ "$CURRENT_STATE" != "done" ] && [ "$CURRENT_STATE" != "input" ]; then
+            set_state "input"
+        fi
         if [ "$IS_ACTIVE" != "1" ]; then
             notify_macos "💬 Input needed" "${MESSAGE:-Claude needs your attention}" "Pop"
         fi
