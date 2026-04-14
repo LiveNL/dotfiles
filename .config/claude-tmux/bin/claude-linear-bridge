@@ -1,44 +1,89 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+LOG="/tmp/bridge-debug.log"
+log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
+
+log "--- bridge invoked: $* ---"
 
 COMMAND_FILE="$1"
 SESSION="${CLAUDE_TMUX_SESSION:-claude}"
 
 if [[ ! -f "$COMMAND_FILE" ]]; then
+    log "ERROR: command file not found: $COMMAND_FILE"
     exit 1
 fi
 
 CONTENT=$(cat "$COMMAND_FILE")
+log "command file: $COMMAND_FILE"
+log "command file content (first 3 lines):"
+echo "$CONTENT" | head -3 | while IFS= read -r line; do log "  $line"; done
 
 # Extract issue ID
 ISSUE_ID=$(echo "$CONTENT" | grep -oE '[A-Z]+-[0-9]+' | head -1)
 if [[ -z "$ISSUE_ID" ]]; then
     ISSUE_ID="linear-$(date +%s)"
+    log "WARN: no issue ID found, using fallback: $ISSUE_ID"
+else
+    log "issue ID: $ISSUE_ID"
 fi
 
 TAB_NAME="cc:${ISSUE_ID}"
 
 # Take the original .command content and inject -w flag
-# Turns: claude 'prompt...'
+# Turns: 'claude' 'prompt...'
 # Into:  claude -w 'ISSUE_ID' 'prompt...'
 LAUNCHER="/tmp/claude-launch-${ISSUE_ID}.sh"
-sed "s|claude '|claude -w '${ISSUE_ID}' '|" "$COMMAND_FILE" > "$LAUNCHER"
+sed "s|'claude' '|claude -w '${ISSUE_ID}' '|" "$COMMAND_FILE" > "$LAUNCHER"
 chmod +x "$LAUNCHER"
+log "launcher: $LAUNCHER"
+log "launcher claude line: $(grep 'claude' "$LAUNCHER" | head -1)"
 
 # Extract project dir for tmux window
 PROJECT_DIR=$(echo "$CONTENT" | sed -n "s/.*cd '\([^']*\)'.*/\1/p" | head -1)
 if [[ -z "$PROJECT_DIR" ]]; then
     PROJECT_DIR="$HOME/projects/tsl/app"
-fi
-
-# Ensure tmux session exists
-if ! tmux has-session -t "$SESSION" 2>/dev/null; then
-    tmux new-session -d -s "$SESSION" -c "$PROJECT_DIR" -n "$TAB_NAME"
+    log "WARN: no project dir found, using fallback: $PROJECT_DIR"
 else
-    tmux new-window -t "$SESSION" -n "$TAB_NAME" -c "$PROJECT_DIR"
+    log "project dir: $PROJECT_DIR"
 fi
 
-tmux send-keys -t "$SESSION:$TAB_NAME" "bash '$LAUNCHER'" Enter
+# Deduplicate: macOS fires the open event multiple times per file.
+# Only the first invocation per issue ID proceeds; the rest exit cleanly.
+LOCKDIR="/tmp/claude-bridge-${ISSUE_ID}.lock"
+if ! mkdir "$LOCKDIR" 2>/dev/null; then
+    log "duplicate invocation, exiting cleanly"
+    exit 0
+fi
+trap "rmdir '$LOCKDIR' 2>/dev/null" EXIT
+log "lock acquired"
 
-open -a Alacritty 2>/dev/null || true
+# Ensure tmux session and window exist.
+# Use = prefix for exact session name matching — without it, tmux fuzzy-matches
+# "claude" to the claude-tmux-hooks window in another session and fails.
+if ! tmux has-session -t "=$SESSION" 2>/dev/null; then
+    log "creating new session: $SESSION"
+    tmux new-session -d -s "$SESSION" -c "$PROJECT_DIR" -n "$TAB_NAME" \
+        && log "session created" \
+        || log "ERROR: new-session failed: $?"
+elif ! tmux list-windows -t "=$SESSION" -F '#W' 2>/dev/null | grep -qxF "$TAB_NAME"; then
+    log "creating new window: $TAB_NAME in session $SESSION"
+    tmux new-window -t "=$SESSION" -n "$TAB_NAME" -c "$PROJECT_DIR" \
+        && log "window created" \
+        || log "ERROR: new-window failed (exit $?)"
+else
+    log "window $TAB_NAME already exists, reusing"
+fi
+
+log "windows in session: $(tmux list-windows -t "=$SESSION" -F '#I:#W' 2>/dev/null | tr '\n' ' ')"
+
+log "sending keys to $SESSION:$TAB_NAME"
+tmux send-keys -t "=$SESSION:$TAB_NAME" "bash '$LAUNCHER'" Enter \
+    && log "send-keys ok" \
+    || log "ERROR: send-keys failed (exit $?)"
+
+log "opening Alacritty"
+open -a Alacritty 2>/dev/null || log "WARN: open Alacritty failed"
+
+log "--- bridge done ---"
