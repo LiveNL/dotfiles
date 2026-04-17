@@ -99,5 +99,6 @@
   "effortLevel": "high",
   "feedbackSurveyState": {
     "lastShownTime": 1759942275284
-  }
+  },
+  "skipAutoPermissionPrompt": true
 }
