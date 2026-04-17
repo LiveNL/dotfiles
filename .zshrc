@@ -5,7 +5,7 @@ export LANG=en_US.UTF-8
 export N_PREFIX=/usr/local
 
 export PATH="$PATH:/usr/local/bin"
-export PATH="/Users/livenl/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 if [[ ! -z ${SSH_AGENT_PID+x} ]]
 then
@@ -115,7 +115,7 @@ alias dig="/opt/homebrew/bin/dig"
 export PATH="$HOME/.npm-global/bin:$PATH"
 
 # Added by Antigravity
-export PATH="/Users/livenl/.antigravity/antigravity/bin:$PATH"
+export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
 
 git() {
   local git_dir

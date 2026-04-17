@@ -43,7 +43,7 @@ log "launcher claude line: $(grep 'claude' "$LAUNCHER" | head -1)"
 # Extract project dir for tmux window
 PROJECT_DIR=$(echo "$CONTENT" | sed -n "s/.*cd '\([^']*\)'.*/\1/p" | head -1)
 if [[ -z "$PROJECT_DIR" ]]; then
-    PROJECT_DIR="$HOME/projects/tsl/app"
+    PROJECT_DIR="${CLAUDE_BRIDGE_PROJECT_DIR:-$HOME/projects}"
     log "WARN: no project dir found, using fallback: $PROJECT_DIR"
 else
     log "project dir: $PROJECT_DIR"

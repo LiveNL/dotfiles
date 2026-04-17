@@ -29,6 +29,11 @@ follower.json
 username.json
 ruff.toml
 .aider*
+*.ttf
+.config/uv/
+.config/gh/hosts.yml
+.config/gtk-2.0/
+.config/autostart/
 
 .claude/
 !.claude/settings.json
