@@ -1,0 +1,21 @@
+[theme]
+background = "#152528"
+foreground = "#e6eaea"
+palette = [
+  "#2f3239",
+  "#e85c51",
+  "#7aa4a1",
+  "#fda47f",
+  "#5a93aa",
+  "#ad5c7c",
+  "#a1cdd8",
+  "#ebebeb",
+  "#6b7089",
+  "#eb746b",
+  "#a3cbc8",
+  "#fdb292",
+  "#82b8cc",
+  "#b97490",
+  "#b8dfe8",
+  "#f5f5f5"
+]
