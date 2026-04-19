@@ -133,7 +133,7 @@ alias claude-work="CLAUDE_CONFIG_DIR=~/.claude-work command claude"
 alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal command claude"
 
 # bun completions
-[ -s "/Users/livenl/.bun/_bun" ] && source "/Users/livenl/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
