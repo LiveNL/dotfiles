@@ -131,3 +131,10 @@ git() {
 # Claude Code account switching
 alias claude-work="CLAUDE_CONFIG_DIR=~/.claude-work command claude"
 alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal command claude"
+
+# bun completions
+[ -s "/Users/livenl/.bun/_bun" ] && source "/Users/livenl/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

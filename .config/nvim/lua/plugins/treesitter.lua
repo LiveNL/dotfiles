@@ -1,39 +1,25 @@
--- Tree-sitter is a parser generator tool and an incremental parsing library.
--- It can build a concrete syntax tree for a source file and efficiently update
--- the syntax tree as the source file is edited.
--- https://github.com/tree-sitter/tree-sitter
-
 return function()
-	require("nvim-treesitter.configs").setup({
-		-- A list of parser names, or "all"
-		ensure_installed = { "c", "lua", "rust", "python", "html" },
+	require("nvim-treesitter").setup()
 
-		-- Install parsers synchronously (only applied to `ensure_installed`)
-		sync_install = false,
+	vim.defer_fn(function()
+		require("nvim-treesitter").install({ "lua", "python", "html" })
+	end, 0)
 
-		-- Automatically install missing parsers when entering buffer
-		auto_install = true,
+	vim.api.nvim_create_autocmd("FileType", {
+		callback = function(ev)
+			if ev.match == "javascript" then
+				return
+			end
+			pcall(require("nvim-treesitter").install, { ev.match })
+		end,
+	})
 
-		-- List of parsers to ignore installing (for "all")
-		ignore_install = { "javascript" },
-
-		highlight = {
-			-- `false` will disable the whole extension
-			enable = true,
-
-			-- NOTE: these are the names of the parsers and not the filetype.
-			-- (for example if you want to
-			-- disable highlighting for the `tex` filetype, you need to include
-			-- `latex` in this list as this is
-			-- the name of the parser)
-			-- list of language that will be disabled
-			disable = { "c", "rust" },
-
-			-- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-			-- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-			-- Using this option may slow down your editor, and you may see some duplicate highlights.
-			-- Instead of true it can also be a list of languages
-			additional_vim_regex_highlighting = false,
-		},
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = { "c", "rust" },
+		callback = function(ev)
+			vim.schedule(function()
+				vim.treesitter.stop(ev.buf)
+			end)
+		end,
 	})
 end

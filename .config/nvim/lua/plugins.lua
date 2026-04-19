@@ -89,8 +89,8 @@ lazy.setup({
 	-- Nvim Treesitter configurations and abstraction layer
 	-- https://github.com/nvim-treesitter/nvim-treesitter
 	{
-
 		"nvim-treesitter/nvim-treesitter",
+		branch = "main",
 		build = ":TSUpdate",
 		config = require("plugins.treesitter"),
 	},
