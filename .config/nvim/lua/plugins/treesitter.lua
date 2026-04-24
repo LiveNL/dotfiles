@@ -10,7 +10,7 @@ return function()
 			if ev.match == "javascript" then
 				return
 			end
-			local available = require("nvim-treesitter").available_parsers()
+			local available = require("nvim-treesitter").get_available()
 			if not vim.tbl_contains(available, ev.match) then
 				return
 			end
