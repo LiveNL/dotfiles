@@ -95,13 +95,14 @@
   "enabledPlugins": {
     "pyright-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true
   },
   "effortLevel": "high",
   "theme": "dark-daltonized",
   "editorMode": "vim",
+  "skipAutoPermissionPrompt": true,
   "feedbackSurveyState": {
     "lastShownTime": 1759942275284
-  },
-  "skipAutoPermissionPrompt": true
+  }
 }
