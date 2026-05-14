@@ -41,6 +41,7 @@ alias 32key="uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]'"
 alias gdiff='git difftool --extcmd icdiff -y'
 alias linesofcode="git ls-files | xargs wc -l"
 alias dotfiles='cd ~/projects/dotfiles'
+alias app='cd ~/projects/tsl/app'
 
 function auto_pipenv_shell {
     if [ ! -n "${PIPENV_ACTIVE+1}" ]; then
