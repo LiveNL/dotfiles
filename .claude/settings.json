@@ -85,6 +85,19 @@
             "command": "bash ~/.claude/hooks/continue-window.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "script/quality --backend --format $CLAUDE_FILE_PATHS 2>&1 | tail -20"
+          },
+          {
+            "type": "command",
+            "command": "script/quality --backend --lint-fix $CLAUDE_FILE_PATHS 2>&1 | tail -20"
+          }
+        ]
       }
     ]
   },
