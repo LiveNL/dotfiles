@@ -41,3 +41,5 @@ ruff.toml
 !.claude/statusline.sh
 !.claude/hooks/
 !.claude/hooks/*
+
+**/.claude/settings.local.json
