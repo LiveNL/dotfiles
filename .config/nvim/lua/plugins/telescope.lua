@@ -20,7 +20,7 @@ return function()
 		pickers = {
 			find_files = {
 				hidden = true,
-				find_command = { "rg", "--files", "--hidden", "--no-ignore", "--glob", "!.git/*", "--glob", "!node_modules/*", "--glob", "!**/__pycache__/*", "--glob", "!.venv/*" },
+				find_command = { "rg", "--files", "--hidden", "--no-ignore", "--glob", "!.git/*", "--glob", "!node_modules/*", "--glob", "!**/__pycache__/*", "--glob", "!.venv/*", "--glob", "!data/*", "--glob", "!.claude/*" },
 				file_ignore_patterns = {
 					"node_modules/",
 					"__pycache__/",
