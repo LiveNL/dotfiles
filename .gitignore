@@ -35,11 +35,15 @@ ruff.toml
 .config/gtk-2.0/
 .config/autostart/
 .config/zed/prompts/
+.config/1Password/
+.config/com.tolaria.app/
 
-.claude/
+# .claude is a live Claude Code state dir — ignore everything, re-include by hand.
+# Must be `.claude/*`, not `.claude/`: git cannot re-include a file whose parent
+# directory is excluded, which silently killed every negation below.
+# CLAUDE.md is deliberately absent — it lives in dotfiles-private (this repo is public).
+.claude/*
 !.claude/settings.json
 !.claude/statusline.sh
-!.claude/hooks/
-!.claude/hooks/*
 
 **/.claude/settings.local.json

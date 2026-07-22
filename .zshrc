@@ -4,15 +4,19 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export N_PREFIX=/usr/local
 
+# keep PATH entries unique — .zshrc and .zprofile both prepend the same dirs
+typeset -U path PATH
+
 export PATH="$PATH:/usr/local/bin"
 export PATH="$HOME/.local/bin:$PATH"
 
-if [[ ! -z ${SSH_AGENT_PID+x} ]]
-then
-   echo "ssh-agent is already running"
-   # Do something knowing the pid exists, i.e. the process with $PID is running
-else
-eval `ssh-agent -s`
+# one shared agent at a fixed socket, reused by every shell.
+# the old `eval $(ssh-agent -s)` spawned a fresh agent per terminal window.
+export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+if ! ssh-add -l >/dev/null 2>&1; then
+  rm -f "$SSH_AUTH_SOCK"
+  eval "$(ssh-agent -a "$SSH_AUTH_SOCK" -s)" >/dev/null
+  ssh-add --apple-load-keychain 2>/dev/null
 fi
 
 # list aliasses
@@ -88,13 +92,13 @@ export RESOLVE_SCRIPT_API="/Library/Application\ Support/Blackmagic\ Design/DaVi
 export RESOLVE_SCRIPT_LIB="/Applications/DaVinci\ Resolve/DaVinci\ Resolve.app/Contents/Libraries/Fusion/fusionscript.so"
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
-export PYTHONPATH="$PWD"
-export PYTHONPATH="$PYTHONPATH:$RESOLVE_SCRIPT_API/Modules/"
-export PYTHONPATH="$PYTHONPATH:$PWD/backend/"
+
+# per-project entries belong in a direnv .envrc — $PWD here freezes the shell's launch dir
+export PYTHONPATH="$RESOLVE_SCRIPT_API/Modules/"
 export MYPYPATH="$PYTHONPATH"
 
-export OPENAI_API_KEY=$(cat ~/.openai_api_key)
-export ANTHROPIC_API_KEY=$(cat ~/.anthropic_api_key)
+[ -f ~/.openai_api_key ] && export OPENAI_API_KEY=$(<~/.openai_api_key)
+[ -f ~/.anthropic_api_key ] && export ANTHROPIC_API_KEY=$(<~/.anthropic_api_key)
 
 if command -v pyenv 1>/dev/null 2>&1; then
   eval "$(pyenv init -)"
@@ -111,7 +115,6 @@ export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
 set rtp+=/opt/homebrew/opt/fzf
 
 ulimit -n 4096
-export PATH=~/.npm-global/bin:$PATH
 alias dig="/opt/homebrew/bin/dig"
 export PATH="$HOME/.npm-global/bin:$PATH"
 
