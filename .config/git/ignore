@@ -1,3 +1,43 @@
-**/.claude/settings.local.json
+# Machine-wide ignores. Git reads this path automatically (XDG default), so no
+# core.excludesfile setting is needed — which means a fresh machine picks it up
+# as soon as ~/.config is symlinked, with no ~/.gitconfig step.
+#
+# Only rules that make sense in EVERY repo belong here. Anything specific to the
+# dotfiles repo itself goes in dotfiles/.gitignore.
 
+# OS / editor junk
+.DS_Store
+tags
+nvim.log
+
+# Ruby / Rails
+/.bundle/
+/.yardoc
+/_yardoc/
+/Gemfile.lock
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+/log
+log/appsignal.log
+dump.rdb
+.pry_history
+
+# JavaScript
+/.yarn.lock
+/.yarnclean
+
+# Python
+.pyre/
+*/**/.pyre/
+.pyre_configuration
+ruff.toml
+
+# Tooling
+.watchmanconfig
+.aider*
+
+# Claude Code — machine-local settings, never shared
 **/.claude/settings.local.json

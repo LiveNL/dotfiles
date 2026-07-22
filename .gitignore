@@ -1,42 +1,28 @@
-/.bundle/
-/.yardoc
-/Gemfile.lock
-/_yardoc/
-/coverage/
-/doc/
-/pkg/
-/spec/reports/
-/tmp/
-/log
-log/appsignal.log
-/.yarn.lock
-/.yarnclean
-.pry_history
+# Rules specific to THIS repo only.
+#
+# Machine-wide rules live in .config/git/ignore, which git reads as the XDG
+# global excludes file. This file used to be pointed at by core.excludesfile,
+# which meant every rule below applied to every repo on the machine — including
+# the .claude/ rules, which silently broke staging in dotfiles-private.
+
 .gitconfig
 packer_compiled.lua
-.DS_Store
-.pyre/
-*/**/.pyre/
-.config/karabiner/automatic_backups/
-.config/github-copilot/
-.config/op/
-.config/gem/
-.config/gpt4all.io/
-.watchmanconfig
-.pyre_configuration
-nvim.log
+*.ttf
 follower.json
 username.json
-ruff.toml
-.aider*
-*.ttf
-.config/uv/
-.config/gh/hosts.yml
-.config/gtk-2.0/
-.config/autostart/
-.config/zed/prompts/
+
 .config/1Password/
+.config/autostart/
 .config/com.tolaria.app/
+.config/gem/
+.config/gh/hosts.yml
+.config/github-copilot/
+.config/gpt4all.io/
+.config/gtk-2.0/
+.config/karabiner/automatic_backups/
+.config/op/
+.config/uv/
+.config/zed/prompts/
 
 # .claude is a live Claude Code state dir — ignore everything, re-include by hand.
 # Must be `.claude/*`, not `.claude/`: git cannot re-include a file whose parent
@@ -45,5 +31,3 @@ ruff.toml
 .claude/*
 !.claude/settings.json
 !.claude/statusline.sh
-
-**/.claude/settings.local.json
