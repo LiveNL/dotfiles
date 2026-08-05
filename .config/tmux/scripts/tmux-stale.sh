@@ -116,11 +116,12 @@ sweep() {
         fi
 
         # An auto-park asserts "nothing happened here for 45 minutes". The moment
-        # the window produces output again that assertion is false, so release it.
-        # Without this a window Claude has resumed working in keeps wearing an
-        # amber badge while it is visibly busy. A hand-park is a decision, not an
-        # inference, so output never clears one.
-        if [ "$park" = "auto" ] && [ "$fp" != "$oldfp" ]; then
+        # that assertion turns false, release it. Two signals: the fingerprint
+        # moved (a normal pane printed), or @claude-state reads running — the
+        # Claude TUI lives on the alternate screen, where output never grows
+        # history, so a resumed conversation is invisible to the fingerprint.
+        # A hand-park is a decision, not an inference, so neither clears one.
+        if [ "$park" = "auto" ] && { [ "$fp" != "$oldfp" ] || [ "$claude" = "running" ]; }; then
             PARK_DEFER_SORT=1 "$PARK" unpark "$session" "$id"
             marked=$(( marked + 1 ))
             touched="${touched}${session}
