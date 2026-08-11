@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+"""PTY wrapper for Claude Code: recolor transcript styles.
+
+Claude Code strips ANSI from model text and renders markdown with a mostly
+monochrome theme (bold headers/labels, blue inline code). This wrapper sits
+between the terminal and claude, rewriting the SGR style sequences claude
+emits so structural styles get distinct colors. Sequences where claude sets
+an explicit color itself (diffs, fence syntax highlighting, UI chrome) are
+left untouched.
+
+Defaults (Jordi's mixer picks, 2026-08-05):
+    bold      -> green 0x4ed470           (headers, labels, verdicts)
+    italic    -> slate 0x62839d           (asides, blockquotes)
+    underline -> azure 0x0cb1ed           (links)
+
+Config, in priority order:
+    ~/.config/claude-color.conf     bold=78;212;112   (live-reloaded!)
+    CLAUDE_COLOR_BOLD / _ITALIC / _UNDERLINE env vars
+    built-in defaults above
+
+Color specs: 256-color index ("114"), truecolor ("r;g;b"), or "off".
+
+The config file is watched while running: edit it (or use --set) and every
+open claude-color session recolors within a second — no restart. Only newly
+drawn output changes; text already on screen keeps its old colors.
+
+    claude-color --set bold="78;212;112" italic=off    # write config live
+    claude-color --palette                             # numbered 256 chart
+
+Known limitation: a style that ends inside an explicitly colored span resets
+that span to the default foreground.
+
+Usage: claude-color [claude args...]        (defaults to plain `claude`)
+"""
+
+import fcntl
+import os
+import pty
+import re
+import select
+import signal
+import sys
+import termios
+import time
+import tty
+
+CONFIG = os.path.expanduser("~/.config/claude-color.conf")
+
+STYLES = [
+    # (name, env var, default spec, on code, off code)
+    ("bold", "CLAUDE_COLOR_BOLD", "78;212;112", b"1", b"22"),
+    ("italic", "CLAUDE_COLOR_ITALIC", "98;131;157", b"3", b"23"),
+    ("underline", "CLAUDE_COLOR_UNDERLINE", "12;177;237", b"4", b"24"),
+]
+
+PARTIAL = re.compile(rb"\x1b(\[[0-9;]*)?$")
+
+
+def parse_spec(name, spec):
+    """Turn '114' / '255;100;0' / 'off' into an SGR color fragment or None."""
+    s = spec.strip().strip('"').strip("'").lower()
+    if s in ("off", "none", ""):
+        return None
+    if re.fullmatch(r"\d{1,3}", s):
+        return b"38;5;" + s.encode()
+    match = re.fullmatch(r"(\d{1,3})[;,](\d{1,3})[;,](\d{1,3})", s)
+    if match:
+        return b"38;2;" + ";".join(match.groups()).encode()
+    raise ValueError(f"bad {name} color spec {spec!r} "
+                     "(use a 256-color index, r;g;b, or 'off')")
+
+
+def read_config():
+    cfg = {}
+    try:
+        with open(CONFIG) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                cfg[key.strip().lower()] = value.strip()
+    except OSError:
+        pass
+    return cfg
+
+
+def build_rewrites():
+    cfg = read_config()
+    rewrites = []
+    for name, env, default, on, off in STYLES:
+        color = parse_spec(name, cfg.get(name, os.environ.get(env, default)))
+        if color is None:
+            continue
+        rewrites.append((b"\x1b[" + on + b"m", b"\x1b[" + on + b";" + color + b"m"))
+        # style-off also drops back to default fg so the color cannot leak
+        rewrites.append((b"\x1b[" + off + b"m", b"\x1b[" + off + b";39m"))
+    return rewrites
+
+
+def config_mtime():
+    try:
+        return os.stat(CONFIG).st_mtime
+    except OSError:
+        return None
+
+
+def cmd_set(pairs):
+    valid = {name for name, *_ in STYLES}
+    cfg = read_config()
+    for pair in pairs:
+        key, sep, value = pair.partition("=")
+        key = key.strip().lower()
+        if not sep or key not in valid:
+            sys.exit(f"claude-color: expected {'/'.join(sorted(valid))}=<spec>, got {pair!r}")
+        parse_spec(key, value)  # validate before writing
+        cfg[key] = value.strip().strip('"').strip("'")
+    os.makedirs(os.path.dirname(CONFIG), exist_ok=True)
+    with open(CONFIG, "w") as f:
+        f.write("# claude-color — live-reloaded by running sessions\n")
+        for key, value in cfg.items():
+            f.write(f"{key}={value}\n")
+    print(f"wrote {CONFIG}")
+    for key, value in cfg.items():
+        print(f"  {key}={value}")
+    print("open claude-color sessions pick this up within a second")
+
+
+def print_palette():
+    out = []
+    for i in range(256):
+        out.append(f"\x1b[38;5;{i}m{i:>4}\x1b[0m")
+        if i % 12 == 11:
+            out.append("\n")
+    out.append("\n")
+    for name, _, default, _, _ in STYLES:
+        out.append(f"{name}={default} (built-in default)\n")
+    out.append('Apply live: claude-color --set bold="r;g;b"\n')
+    sys.stdout.write("".join(out))
+
+
+class Translator:
+    """Rewrites SGR sequences, holding back a partial escape at chunk end."""
+
+    def __init__(self, rewrites):
+        self.rewrites = rewrites
+        self.carry = b""
+
+    def feed(self, data):
+        data = self.carry + data
+        match = PARTIAL.search(data)
+        if match:
+            self.carry = data[match.start():]
+            data = data[: match.start()]
+        else:
+            self.carry = b""
+        for old, new in self.rewrites:
+            data = data.replace(old, new)
+        return data
+
+
+def copy_winsize(master_fd):
+    try:
+        size = fcntl.ioctl(sys.stdin.fileno(), termios.TIOCGWINSZ, b"\0" * 8)
+        fcntl.ioctl(master_fd, termios.TIOCSWINSZ, size)
+    except OSError:
+        pass
+
+
+def main():
+    args = sys.argv[1:]
+    if args and args[0] == "--palette":
+        print_palette()
+        return
+    if args and args[0] == "--set":
+        try:
+            cmd_set(args[1:])
+        except ValueError as err:
+            sys.exit(f"claude-color: {err}")
+        return
+
+    try:
+        rewrites = build_rewrites()
+    except ValueError as err:
+        sys.exit(f"claude-color: {err}")
+
+    cmd = args or ["claude"]
+    pid, master_fd = pty.fork()
+    if pid == 0:
+        os.execvp(cmd[0], cmd)
+
+    interactive = sys.stdin.isatty()
+    old_attrs = None
+    if interactive:
+        copy_winsize(master_fd)
+        signal.signal(signal.SIGWINCH, lambda *_: copy_winsize(master_fd))
+        old_attrs = termios.tcgetattr(sys.stdin.fileno())
+        tty.setraw(sys.stdin.fileno())
+
+    translator = Translator(rewrites)
+    stdin_fd = sys.stdin.fileno()
+    stdin_open = True
+    seen_mtime = config_mtime()
+    next_check = time.monotonic() + 0.5
+    try:
+        while True:
+            fds = [master_fd] + ([stdin_fd] if stdin_open else [])
+            try:
+                ready, _, _ = select.select(fds, [], [], 1.0)
+            except InterruptedError:
+                continue
+
+            now = time.monotonic()
+            if now >= next_check:
+                next_check = now + 0.5
+                mtime = config_mtime()
+                if mtime != seen_mtime:
+                    seen_mtime = mtime
+                    try:
+                        translator.rewrites = build_rewrites()
+                    except ValueError:
+                        pass  # bad edit: keep the old colors, never kill the session
+
+            if master_fd in ready:
+                try:
+                    data = os.read(master_fd, 65536)
+                except OSError:
+                    break
+                if not data:
+                    break
+                os.write(sys.stdout.fileno(), translator.feed(data))
+            if stdin_fd in ready:
+                data = os.read(stdin_fd, 65536)
+                if not data:
+                    stdin_open = False
+                    continue
+                os.write(master_fd, data)
+    finally:
+        if old_attrs is not None:
+            termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_attrs)
+        os.close(master_fd)
+
+    _, status = os.waitpid(pid, 0)
+    sys.exit(os.waitstatus_to_exitcode(status))
+
+
+if __name__ == "__main__":
+    main()

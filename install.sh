@@ -20,6 +20,7 @@ link "$REPO/.config"    "$HOME/.config"
 link "$REPO/.claude"    "$HOME/.claude"
 link "$REPO/.zshrc"     "$HOME/.zshrc"
 link "$REPO/.tmux.conf" "$HOME/.tmux.conf"
+link "$REPO/.local/bin/claude-color" "$HOME/.local/bin/claude-color"
 
 if [ "$(uname -s)" = "Darwin" ]; then
     echo "Installing LaunchAgents..."
