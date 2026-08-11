@@ -213,7 +213,12 @@ park() {
     local home
     home=$(tmux display-message -p -t "$id" '#{window_index}' 2>/dev/null)
 
+    # Clearing the watch token first (same atomic command list) kills any live
+    # dwell watcher: a park must not be released by attention that predates it,
+    # or parking the window you are sitting in would undo itself on the
+    # watcher's next tick. A release needs a fresh visit after the park.
     tmux \
+        set-option -w -t "$id" @park-watch "" ";" \
         set-option -w -t "$id" @park "$kind" ";" \
         set-option -w -t "$id" @park-at "${at:-$(now)}" ";" \
         set-option -w -t "$id" @park-seq "$(next_seq)" ";" \
@@ -281,9 +286,11 @@ toggle() {
 }
 
 # Fired from the session-window-changed hook. Stamps attention so the stale
-# detector has a second signal, and releases an auto-stale mark — staying in a
-# window is the same as resuming it. A hand-parked window stays parked, so
-# peeking at one does not reshuffle the bar under you.
+# detector has a second signal, and releases a park — staying in a window is
+# the same as resuming it, hand-park and auto-park alike. Peeking stays safe:
+# release requires dwell, and park() invalidates the live watcher token, so a
+# window parked while current cannot release itself — only a visit that starts
+# after the park counts.
 #
 # Attention requires dwell, it is not granted on arrival. Cycling sideways
 # through ten windows would otherwise reset all ten idle clocks, so auto-stale
@@ -301,7 +308,7 @@ touch_window() {
 
     if [ "$dwell" -le 0 ]; then
         set_opt @park-touch "$id" "$(now)"
-        [ "$(opt @park "$id")" = "auto" ] && unpark "$session" "$id"
+        [ -n "$(opt @park "$id")" ] && unpark "$session" "$id"
         return 0
     fi
 
@@ -321,7 +328,7 @@ touch_window() {
 
             set_opt @park-touch "$id" "$(now)"
 
-            if [ "$(opt @park "$id")" = "auto" ]; then
+            if [ -n "$(opt @park "$id")" ]; then
                 unpark "$session" "$id"
             fi
         done

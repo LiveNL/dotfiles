@@ -37,7 +37,9 @@ the gotchas below for why that matters here.
 
 - Parked windows render dim gray with a `⏸` badge and sort to the highest indices, oldest park first.
 - Auto-stale windows render amber with a `◌` badge and clear themselves the moment you select the window.
-- A hand-park never clears itself, so peeking at one does not reshuffle the bar.
+- A hand-park releases once you work in it: 30s of dwell after a fresh visit, or
+  submitting a Claude prompt there. Peeking (<30s) does not reshuffle the bar,
+  and background output alone never clears a hand-park.
 - Unparking returns the window to the index it was parked from, not the end of the active block.
 - Re-ordering pins the active window, so sorting never moves your focus.
 - Parking is silent on purpose — `message-style` here is a light background, so a
