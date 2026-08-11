@@ -134,3 +134,69 @@ whatever windows came back with matching names.
   an accept, so the popup looked like it closed instantly and jumped to a window
   nobody picked. `--no-mouse` fixes the phantom accept; a stray ESC can still
   cancel it. That is why the default binding is a native menu.
+
+# Crash recovery
+
+Alacritty crashing is survivable — the tmux server is a separate process, so
+reattaching gets everything back. A restart is not: the whole layout only ever
+existed in that server's memory. The Claude conversations that were running do
+survive, as transcripts under `~/.claude/projects`, but nothing on disk says
+which conversation lived in which window.
+
+`tmux-snapshot.sh` writes that missing half; `tmux-restore.sh` puts it back.
+
+## Keys and commands
+
+| Where | Action |
+| --- | --- |
+| `tmux-restore list` | what the last snapshot holds, with the final prompt per window |
+| `tmux-restore restore <workspace>` | rebuild a session: windows, cwds, splits, park state, resumed chats |
+| `prefix + C-r` | fzf popup, pulls single lost windows into the current session |
+| first shell after a reboot | one-line notice, printed by `.zshrc` |
+
+`restore` takes `--into NAME`, `--from FILE`, `--dry-run` and `--no-run` (type
+the resume command but do not run it). It never merges into a live session of
+the same name — a second `livenl` becomes `livenl-2`.
+
+## State on disk
+
+Under `~/.local/state/tmux-restore`:
+
+| File | Meaning |
+| --- | --- |
+| `latest.tsv` | current layout, rewritten every sweep |
+| `snap-<epoch>.tsv` | history, one per layout change, newest 20 kept |
+| `pre-boot-<boot>.tsv` | last layout seen before this boot — the crash record |
+| `hinted-<boot>`, `restored-<boot>` | markers, so the notice appears once |
+
+One row per pane: session, window index and name, `@park`, `@park-note`, pane
+index, cwd, running command, and `@claude-session`. The last field is stamped on
+the pane by `~/.claude/hooks/record-session.sh` on SessionStart, and is the only
+thing tying a window to its conversation.
+
+## Gotchas worth remembering
+
+- The pre-boot copy exists because the first tmux you start after a reboot would
+  otherwise overwrite `latest.tsv` with an empty layout before you ever ran the
+  restore. An empty pre-boot file is a real answer: nothing was running.
+- Windows with no recorded id still recover: the newest transcript for that
+  directory is used, marked `⬡` rather than `⬢`. That is how anything from
+  before this existed is readable at all.
+- Restored panes are *created running* `claude --resume <id>`, not created empty
+  and typed into. send-keys races the shell's own startup — half the command
+  landed on the raw tty before zsh claimed it, and the other half after.
+- `after-kill-window` is not a hook in tmux 3.6 and rejects the config line that
+  names it. `window-unlinked` is the one that fires.
+- No rename hook: `automatic-rename` fires one every time the running command
+  changes, and a stale window name is the cheapest thing to be late on.
+- The boot time comes from `kern.boottime`, which prints `{ sec = …, usec = … }`.
+  A greedy `sec = ` match lands on `usec` and the boot time comes out six digits
+  long.
+- `prefix + C-r` lists only windows that are *not* open right now — snapshots
+  are read newest-first, deduped by session, name and cwd, and anything the
+  server still has is dropped. Offering the open ones made the picker a list of
+  what you were already looking at.
+- A snapshot counts as new only if the layout changed, ignoring `window_active`,
+  `pane_active` and `pane_current_command`. Comparing rows verbatim treated
+  every focus change as a change: 20 history files covered 40 minutes and the
+  windows actually worth restoring had already been pruned.

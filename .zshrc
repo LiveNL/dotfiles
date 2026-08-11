@@ -140,6 +140,13 @@ git() {
 alias claude-work="CLAUDE_CONFIG_DIR=~/.claude-work command claude"
 alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal command claude"
 
+# After a crash or a restart, say what tmux was holding — see
+# .config/tmux/scripts/tmux-restore.sh. Prints once per boot and only when a
+# pre-boot snapshot exists, so an ordinary shell pays one file test.
+if [[ -z "$TMUX" && -o interactive ]]; then
+  "$HOME/.config/tmux/scripts/tmux-restore.sh" hint 2>/dev/null
+fi
+
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
