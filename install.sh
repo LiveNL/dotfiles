@@ -21,6 +21,18 @@ link "$REPO/.claude"    "$HOME/.claude"
 link "$REPO/.zshrc"     "$HOME/.zshrc"
 link "$REPO/.tmux.conf" "$HOME/.tmux.conf"
 
+if [ "$(uname -s)" = "Darwin" ]; then
+    echo "Installing LaunchAgents..."
+    for plist in "$REPO"/.config/launchd/*.plist; do
+        [ -e "$plist" ] || continue
+        label="$(basename "$plist" .plist)"
+        target="$HOME/Library/LaunchAgents/$(basename "$plist")"
+        link "$plist" "$target"
+        launchctl bootout "gui/$UID/$label" 2>/dev/null || true
+        launchctl bootstrap "gui/$UID" "$target"
+    done
+fi
+
 if [ "${SKIP_BREW:-}" = "1" ]; then
     echo "Skipping brew bundle (SKIP_BREW=1)"
 elif command -v brew >/dev/null 2>&1; then
