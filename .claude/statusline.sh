@@ -60,18 +60,39 @@ C_MAGENTA=$'\033[35m'
 C_DIM=$'\033[2m'
 C_RST=$'\033[0m'
 
-line1="🤖 ${model}"
-line1+=" ${C_DIM}|${C_RST} 💰 $(printf '$%.2f' "${cost:-0}") session"
-[ -n "$today" ] && line1+="${C_DIM} / ${C_RST}${today}"
-[ -n "$block" ] && line1+="${C_DIM} / ${C_RST}${block}"
-[ -n "$burn" ] && line1+=" ${C_DIM}|${C_RST} 🔥 ${burn}"
+# Group divider, shared by both lines so they read on the same rhythm.
+SEP=" ${C_DIM}|${C_RST} "
+
+# Spend is context, not signal — it is already spent and nothing on the line can
+# change it. The whole group stays dim so the two live numbers below can be the
+# only colour on the line.
+line1="${C_DIM}🤖 ${model}${C_RST}"
+
+money="💰 $(printf '$%.2f' "${cost:-0}") session"
+[ -n "$today" ] && money+=" / ${today}"
+[ -n "$block" ] && money+=" / ${block}"
+line1+="${SEP}${C_DIM}${money}${C_RST}"
+
+# Burn rate is the one figure worth reacting to mid-session, so it gets the same
+# green/amber/red treatment as the context gauge. Thresholds in $/hr.
+if [ -n "$burn" ]; then
+  rate=${burn#\$}
+  rate=${rate%/hr}
+  rate=${rate//,/}
+
+  burn_color=$C_GREEN
+  awk -v r="$rate" 'BEGIN { exit !(r >= 30) }' && burn_color=$C_YELLOW
+  awk -v r="$rate" 'BEGIN { exit !(r >= 60) }' && burn_color=$C_RED
+
+  line1+="${SEP}🔥 ${burn_color}${burn}${C_RST}"
+fi
 
 if [ "${ctx:-0}" != "0" ]; then
   ctx_color=$C_GREEN
   [ "$pct" -ge 50 ] && ctx_color=$C_YELLOW
   [ "$pct" -ge 80 ] && ctx_color=$C_RED
   ctx_fmt=$(printf "%'d" "$ctx" 2>/dev/null || printf '%s' "$ctx")
-  line1+=" ${C_DIM}|${C_RST} 🧠 ${ctx_color}${ctx_fmt} (${pct}%)${C_RST}"
+  line1+="${SEP}🧠 ${ctx_color}${ctx_fmt} (${pct}%)${C_RST}"
 fi
 
 # ---- line 2: path + git ----
@@ -85,7 +106,7 @@ seg="${C_CYAN}📁 ${dir/#$HOME/~}${C_RST}"
 if git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   branch=$(git -C "$dir" branch --show-current 2>/dev/null)
   [ -z "$branch" ] && branch=$(git -C "$dir" rev-parse --short HEAD 2>/dev/null)
-  seg+=" ${C_MAGENTA}⎇ ${branch}${C_RST}"
+  seg+="${SEP}${C_MAGENTA}⎇ ${branch}${C_RST}"
 
   # Linked worktree: git-dir differs from the shared common dir
   git_dir=$(git -C "$dir" rev-parse --git-dir 2>/dev/null)
@@ -114,10 +135,17 @@ if git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
       print f, a, d }')"
   untracked=$(git -C "$dir" ls-files --others --exclude-standard 2>/dev/null | head -100 | wc -l | tr -d ' ')
 
+  # Collected first so the divider is emitted once, whichever half is present.
+  stats=""
   if [ -n "$files" ] && [ "$files" != "0" ]; then
-    seg+=" ${C_GREEN}+${adds:-0}${C_RST}${C_DIM}/${C_RST}${C_RED}-${dels:-0}${C_RST} ${C_DIM}·${files}f${C_RST}"
+    stats+="${C_GREEN}+${adds:-0}${C_RST}${C_DIM}/${C_RST}${C_RED}-${dels:-0}${C_RST} ${C_DIM}·${files}f${C_RST}"
   fi
-  [ "${untracked:-0}" != "0" ] && seg+=" ${C_DIM}?${untracked}${C_RST}"
+  if [ "${untracked:-0}" != "0" ]; then
+    [ -n "$stats" ] && stats+=" "
+    stats+="${C_DIM}?${untracked}${C_RST}"
+  fi
+
+  [ -n "$stats" ] && seg+="${SEP}${stats}"
 fi
 
 printf '%s\n%s\n' "$line1" "$seg"
