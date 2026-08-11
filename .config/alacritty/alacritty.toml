@@ -1,4 +1,8 @@
 
+[colors]
+# bold text also picks the bright variant — headers/labels get weight AND lift
+draw_bold_text_with_bright_colors = true
+
 [[colors.indexed_colors]]
 color = "0xff8349"
 index = 16
@@ -20,14 +24,14 @@ yellow = "0xfdb292"
 black = "0x6b7089"    # comments/dimmed text — more visible
 blue = "0x82b8cc"     # code/links — brighter
 cyan = "0xb8dfe8"     # inline code — more contrast
-green = "0xa3cbc8"    # code blocks — pops more
+green = "0x9ce0b4"    # diff + lines / success — actually reads as green now
 white = "0xf5f5f5"    # main text — crisper
 
 [colors.normal]
 black = "0x2f3239"
 blue = "0x5a93aa"
 cyan = "0xa1cdd8"
-green = "0x7aa4a1"
+green = "0x6fbf94"
 magenta = "0xad5c7c"
 red = "0xe85c51"
 white = "0xebebeb"
@@ -61,7 +65,19 @@ y = 0
 
 [font.normal]
 family = "LiterationMono Nerd Font"
-style = "Book"
+style = "Regular"
+
+[font.bold]
+family = "LiterationMono Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "LiterationMono Nerd Font"
+style = "Italic"
+
+[font.bold_italic]
+family = "LiterationMono Nerd Font"
+style = "Bold Italic"
 
 [font.offset]
 x = 0
