@@ -28,6 +28,19 @@ SEP=$'\037'
 
 now() { date +%s; }
 
+# Which session a popup is acting on. run-shell expands `#{session_name}` in the
+# command it is handed; display-popup does not, so a popup started that way is
+# passed the format string itself and every target built from it misses. Asking
+# tmux directly works from either, and inside a popup — where $TMUX_PANE is not
+# set — it is the only thing that does.
+resolve_session() {
+    local s="${1:-}"
+    case "$s" in
+        ''|*'#{'*) tmux display-message -p '#S' 2>/dev/null ;;
+        *)         printf '%s' "$s" ;;
+    esac
+}
+
 # tmux options are per-window; window ids (@43) are stable across renumbering,
 # so every target here is an id, never an index.
 opt() { tmux show-options -wqv -t "$2" "$1" 2>/dev/null; }
@@ -462,7 +475,8 @@ pause() {
 # Rows are built here rather than in the format string so ages stay human and
 # the note is visible. Runs inside display-popup, where $TMUX is still set.
 picker() {
-    local session="$1"
+    local session
+    session=$(resolve_session "${1:-}")
 
     # PARK_DEBUG=1 traces a popup that dies too fast to read.
     if [ -n "${PARK_DEBUG:-}" ]; then

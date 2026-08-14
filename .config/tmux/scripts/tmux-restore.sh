@@ -35,6 +35,20 @@ CLAUDE_BIN=$(command -v claude 2>/dev/null || echo claude)
 # here (no park, no note, no Claude session), so this matters more than usual.
 SEP=$'\037'
 
+# Which session the picker restores into. run-shell expands `#{session_name}` in
+# the command it is handed; display-popup does not, so a popup started that way
+# receives the format string itself — `new-session -s '#{session_name}'` then
+# fails with "invalid session" and the restore ends silently. Asking tmux works
+# from either, and inside a popup — where $TMUX_PANE is not set — it is the only
+# thing that does.
+resolve_session() {
+    local s="${1:-}"
+    case "$s" in
+        ''|*'#{'*) tmux display-message -p '#S' 2>/dev/null ;;
+        *)         printf '%s' "$s" ;;
+    esac
+}
+
 boot_time() {
     local sec
     # `{ sec = 1786357709, usec = 577484 }` — the brace matters: without it the
@@ -345,9 +359,21 @@ restore_window() {
     if [ -n "$dry" ]; then
         printf '  would create %s:%s %s (%s)\n' "$target" "$widx" "$wname" "$first_cwd"
     elif tmux has-session -t "=$target" 2>/dev/null; then
-        wid=$(tmux new-window -d -P -F '#{window_id}' -t "$target:" -n "$wname" -c "$first_cwd" ${cmd:+"$cmd"} 2>/dev/null)
+        wid=$(tmux new-window -d -P -F '#{window_id}' -t "$target:" -n "$wname" -c "$first_cwd" ${cmd:+"$cmd"} 2>&1)
     else
-        wid=$(tmux new-session -d -P -F '#{window_id}' -s "$target" -n "$wname" -c "$first_cwd" ${cmd:+"$cmd"} 2>/dev/null)
+        wid=$(tmux new-session -d -P -F '#{window_id}' -s "$target" -n "$wname" -c "$first_cwd" ${cmd:+"$cmd"} 2>&1)
+    fi
+
+    # Whatever tmux said instead of a window id is the only account of why the
+    # restore did nothing, and a picker that swallows it looks like a key that
+    # does not work.
+    if [ -z "$dry" ]; then
+        case "$wid" in
+            @[0-9]*) ;;
+            *) printf 'could not create %s in %s: %s\n' \
+                   "$wname" "$target" "${wid:-tmux gave no reason}" >&2
+               return 1 ;;
+        esac
     fi
 
     local n=0
@@ -515,8 +541,8 @@ candidates() {
 # Single windows, pulled into the session you are in — the "I closed the wrong
 # tab" case, which wants none of the workspace machinery above.
 popup() {
-    local session="${1:-}"
-    local file seen
+    local session file seen
+    session=$(resolve_session "${1:-}")
 
     file=$(mktemp "${TMPDIR:-/tmp}/tmux-restore.XXXXXX")
     seen=$(mktemp "${TMPDIR:-/tmp}/tmux-restore-seen.XXXXXX")
@@ -578,6 +604,7 @@ popup() {
         *)     printf 'fzf exited %s\n' "$rc"; read -r -n 1 -s; return 0 ;;
     esac
 
+    local failed=0
     while IFS= read -r row; do
         [ -n "$row" ] || continue
         local sess widx wname park note
@@ -586,10 +613,15 @@ popup() {
         [ -n "$sess" ] || continue
 
         IFS="$SEP" read -r _ _ wname park note _ _ _ < <(windows_of "$file" | awk -F"$SEP" -v s="$sess" -v i="$widx" '$1 == s && $2 == i')
-        restore_window "$file" "$sess" "$widx" "$wname" "$park" "$note" "$session" "" 1
+        restore_window "$file" "$sess" "$widx" "$wname" "$park" "$note" "$session" "" 1 \
+            || failed=$(( failed + 1 ))
     done <<<"$pick"
 
+    # The popup closes the moment this returns, taking any complaint with it.
+    [ "$failed" -gt 0 ] && read -r -n 1 -s
+
     tmux refresh-client -S 2>/dev/null
+    return 0
 }
 
 # ------------------------------------------------------------------------ hint
