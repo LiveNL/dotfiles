@@ -30,6 +30,8 @@ dump.rdb
 /.yarnclean
 
 # Python
+__pycache__/
+*.py[cod]
 .pyre/
 */**/.pyre/
 .pyre_configuration
