@@ -76,6 +76,15 @@ NESTED = ("quotebold", "CLAUDE_COLOR_QUOTEBOLD", "inherit")
 PARTIAL = re.compile(rb"\x1b(\[[0-9;]*)?$")
 SGR = re.compile(rb"\x1b\[([0-9;]*)m")
 
+# A terminal hyperlink carries no style of its own: OSC 8 makes the text
+# clickable and says nothing about how it should look, so a link Claude Code
+# emits arrives with no SGR attached and the underline rule never fires on it.
+# Matching the sequence itself is the only way to see one.
+#   open:  ESC ] 8 ; params ; URI  ST        close: ESC ] 8 ; ; ST
+OSC8 = re.compile(rb"\x1b\]8;[^;\x1b\x07]*;([^\x1b\x07]*)(?:\x1b\\|\x07)")
+TOKEN = re.compile(OSC8.pattern + rb"|\x1b\[([0-9;]*)m")
+ST = re.compile(rb"\x1b\\|\x07")
+
 STYLE_ON = {on: name for name, _, _, on, _ in STYLES}
 STYLE_OFF = {off: name for name, _, _, _, off in STYLES}
 
@@ -596,69 +605,110 @@ def cmd_tune():
 class Translator:
     """Rewrites SGR sequences, holding back a partial escape at chunk end.
 
-    Stateful on italic, because markdown nests bold inside a blockquote's italic
-    run: what a bold-on means depends on whether a quote is currently open.
+    Keeps a stack of the styles it has opened, because what a code means
+    depends on what is already open: bold inside a blockquote is emphasis
+    rather than a heading, and any style ending inside another one has to fall
+    back to that one's colour instead of the default foreground.
     """
 
     def __init__(self, colors):
         self.colors = colors
         self.carry = b""
-        self.in_italic = False
+        self.stack = []
+        self.link = False
 
     def apply(self, colors):
         self.colors = colors
 
+    def _in_italic(self):
+        return any(name == "italic" for name, _ in self.stack)
+
     def _restore(self):
-        """Colour a nested style falls back to when it ends."""
-        quote = self.colors.get("italic")
-        if self.in_italic and quote:
-            return b";" + quote
+        """Colour to fall back to when the innermost style ends."""
+        for _, color in reversed(self.stack):
+            if color:
+                return b";" + color
         return b";39"
 
-    def _rewrite(self, match):
-        params = match.group(1)
+    def _hyperlink(self, match):
+        # Underline is the one thing a link should always have, whether or not
+        # Claude Code styled it. The colour follows the underline setting; with
+        # underline=off the link still gets its rule, just no hue.
+        color = self.colors.get("underline")
+        if match.group(1):
+            self.link = True
+            self.stack.append(("underline", color))
+            on = b"\x1b[4" + (b";" + color if color else b"") + b"m"
+            return match.group(0) + on
 
-        # A full reset closes the quote as surely as an explicit italic-off.
+        if not self.link:
+            return match.group(0)
+
+        self.link = False
+        for i in range(len(self.stack) - 1, -1, -1):
+            if self.stack[i][0] == "underline":
+                del self.stack[i]
+                break
+        return b"\x1b[24" + self._restore() + b"m" + match.group(0)
+
+    def _sgr(self, match, params):
+        # A full reset closes everything, links included.
         if params in (b"", b"0"):
-            self.in_italic = False
+            self.stack = []
+            self.link = False
             return match.group(0)
 
         name = STYLE_ON.get(params)
         if name:
-            nested = self.in_italic
-            if name == "italic":
-                self.in_italic = True
-
             color = self.colors.get(name)
-            if name == "bold" and nested:
+            if name == "bold" and self._in_italic():
                 color = self.colors.get("quotebold")
+
+            self.stack.append((name, color))
             if color is None:
                 return match.group(0)
-
             return b"\x1b[" + params + b";" + color + b"m"
 
         name = STYLE_OFF.get(params)
         if name:
-            if name == "italic":
-                self.in_italic = False
-            # Inside a quote the fallback is the quote's colour, not the default
-            # foreground — otherwise every nested span punches a hole in it.
-            if self.colors.get(name) is None and not self.in_italic:
-                return match.group(0)
+            closing = None
+            for i in range(len(self.stack) - 1, -1, -1):
+                if self.stack[i][0] == name:
+                    closing = self.stack.pop(i)
+                    break
 
-            return b"\x1b[" + params + self._restore() + b"m"
+            # Leave the code alone when nothing coloured is involved, so a
+            # colour Claude Code set itself is never reset out from under it.
+            restore = self._restore()
+            if (closing is None or closing[1] is None) and restore == b";39":
+                return match.group(0)
+            return b"\x1b[" + params + restore + b"m"
 
         return match.group(0)
 
+    def _token(self, match):
+        if match.group(1) is not None:
+            return self._hyperlink(match)
+        return self._sgr(match, match.group(2))
+
+    def _hold(self, data):
+        """Index to carry from: an escape sequence split across chunks."""
+        start = data.rfind(b"\x1b]")
+        if start != -1 and not ST.search(data, start + 2):
+            return start
+
+        match = PARTIAL.search(data)
+        return match.start() if match else None
+
     def feed(self, data):
         data = self.carry + data
-        match = PARTIAL.search(data)
-        if match:
-            self.carry = data[match.start():]
-            data = data[: match.start()]
-        else:
+        hold = self._hold(data)
+        if hold is None:
             self.carry = b""
-        return SGR.sub(self._rewrite, data)
+        else:
+            self.carry = data[hold:]
+            data = data[:hold]
+        return TOKEN.sub(self._token, data)
 
 
 def copy_winsize(master_fd):
@@ -697,7 +747,7 @@ def main():
     except ValueError as err:
         sys.exit(f"claude-color: {err}")
 
-    cmd = args or ["claude"]
+    cmd = ["claude", *args]
     pid, master_fd = pty.fork()
     if pid == 0:
         os.execvp(cmd[0], cmd)
