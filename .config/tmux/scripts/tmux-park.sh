@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#?tool park  the park engine behind prefix + P/N/F/O
 # Park tmux windows: mark a window as deferred, dim it, and push it right.
 #
 # State lives in window options, never in the window name. The name stays

@@ -22,6 +22,7 @@ link "$REPO/.zshrc"     "$HOME/.zshrc"
 link "$REPO/.tmux.conf" "$HOME/.tmux.conf"
 link "$REPO/.local/bin/claude-color" "$HOME/.local/bin/claude-color"
 link "$REPO/.local/bin/tmux-restore" "$HOME/.local/bin/tmux-restore"
+link "$REPO/.local/bin/cheat"        "$HOME/.local/bin/cheat"
 
 if [ "$(uname -s)" = "Darwin" ]; then
     echo "Installing LaunchAgents..."

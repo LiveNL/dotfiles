@@ -20,6 +20,7 @@ if ! ssh-add -l >/dev/null 2>&1; then
 fi
 
 # list aliasses
+#? shell  lines in A that are not in B
 diff_lists() {
     if [ "$#" -ne 3 ]; then
         echo "Usage: diff_lists <source_file> <exclude_file> <output_file>"
@@ -29,28 +30,31 @@ diff_lists() {
     grep -Fvxf "$2" "$1" > "$3"
 }
 
-alias ll='ls -al'
+alias ll='ls -al'   #? shell  long listing
 alias l='ls -l -a'
 alias ls="ls -G -F"
-alias ag='Ag --width 100 --hidden'
-alias ndiff='nvim -u None -d'
-alias co="git checkout"
-alias gb="git branch --sort committerdate | tail"
+alias ag='Ag --width 100 --hidden'   #? search  Ag, 100 cols, hidden files included
+alias ndiff='nvim -u None -d'   #? diff  nvim side-by-side, no config
+alias co="git checkout"   #? git  checkout
+alias gb="git branch --sort committerdate | tail"   #? git  branches by last commit date
 alias curl='noglob curl'
-alias project_lines='git ls-files | xargs wc -l'
-alias wallpapers='open /Library/Application\ Support/com.apple.idleassetsd/Customer/4KSDR240FPS'
-alias 32key="uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]'"
+alias project_lines='git ls-files | xargs wc -l'   #? git  line count over tracked files
+alias wallpapers='open /Library/Application\ Support/com.apple.idleassetsd/Customer/4KSDR240FPS'   #? macos  open the 4K aerial wallpaper folder
+alias 32key="uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]'"   #? shell  32-char hex key
 
 # PTY wrapper (~/.local/bin/claude-color) recolors bold/italic/underline in the
 # transcript; colors live in ~/.config/claude-color.conf, live-reloaded
+#? claude  wrapper that recolors the transcript
 alias claude='claude-color'
 
 # requires pip install git+https://github.com/jeffkaufman/icdiff.git
-alias gdiff='git difftool --extcmd icdiff -y'
-alias linesofcode="git ls-files | xargs wc -l"
-alias dotfiles='cd ~/projects/dotfiles'
-alias app='cd ~/projects/tsl/app'
+alias gdiff='git difftool --extcmd icdiff -y'   #? diff  git diff through icdiff
+alias linesofcode="git ls-files | xargs wc -l"   #? git  line count over tracked files
+alias dotfiles='cd ~/projects/dotfiles'   #? nav  cd to the dotfiles repo
+alias app='cd ~/projects/tsl/app'   #? nav  cd to tsl/app
+alias lf='op run --env-file=$HOME/.langfuse.env --no-masking -- langfuse'   #? tools  langfuse with 1Password env
 
+#? python  enter the pipenv shell when a Pipfile is here
 function auto_pipenv_shell {
     if [ ! -n "${PIPENV_ACTIVE+1}" ]; then
         if [ -f "Pipfile" ] ; then
@@ -59,6 +63,7 @@ function auto_pipenv_shell {
     fi
 }
 
+#? shell  ag + sed rename across the tree
 function find_replace() {
     if [ "$#" -ne 2 ]; then
         echo "Usage: find_replace <input> <output>"
@@ -77,10 +82,10 @@ alias find_replace=find_replace
 # colors for terminal and tmux
 export TERM="xterm-256color"
 export EDITOR="nvim"
-alias tmux="tmux -2"
+alias tmux="tmux -2"   #? tmux  tmux with 256 colours forced
 
 # vim key bindings
-bindkey -v
+bindkey -v   #? shell:Esc  vi mode on the command line, then hjkl / w / b / ciw
 
 # prompt theme
 source ~/projects/dotfiles/minimal.zsh
@@ -125,6 +130,7 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 # Added by Antigravity
 export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
 
+#? git  drop a stale index.lock before running git
 git() {
   local git_dir
   git_dir=$(command git rev-parse --git-dir 2>/dev/null)

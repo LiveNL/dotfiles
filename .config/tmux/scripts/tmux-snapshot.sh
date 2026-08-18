@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#?tool restore  mirror the tmux layout to disk on a timer
 # Mirror the tmux layout to disk, so a crash or a reboot leaves a record of what
 # was open. Everything tmux knows about a window lives in server memory and dies
 # with the server. The Claude conversations that lived in those windows do

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#?tool claude  PTY wrapper: transcript colours, --tune to dial them
 """PTY wrapper for Claude Code: recolor transcript styles.
 
 Claude Code strips ANSI from model text and renders markdown with a mostly

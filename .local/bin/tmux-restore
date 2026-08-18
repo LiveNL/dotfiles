@@ -1,4 +1,5 @@
 #!/bin/sh
+#?tool restore  put a whole workspace back, no tmux needed
 # Shell-side entry point for the tmux snapshot recovery. It lives on the PATH
 # rather than behind a tmux key binding because the moment you need it most —
 # the first shell after a reboot — there is no tmux server to bind anything to.

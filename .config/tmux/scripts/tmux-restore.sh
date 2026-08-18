@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#?tool restore  read a snapshot and rebuild the windows
 # Read the snapshots written by tmux-snapshot.sh and put the windows back.
 #
 # What a snapshot cannot hold is the conversation itself — only the id of the

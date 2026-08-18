@@ -1,0 +1,324 @@
+#!/usr/bin/env bash
+#?tool shell  this index — every custom key, alias and script, searchable
+# cheat — one searchable index of everything custom in these dotfiles.
+#
+# The note lives on the line it describes, so there is no second file to keep in
+# sync: annotate a binding, alias or script with a `#?` comment and it appears
+# here. Two forms, both optional-group-first:
+#
+#   bind C-r display-popup ...   #? restore  pull back a closed window
+#   #? git  recent branches
+#   alias gb="git branch ..."
+#   #?tool restore  put a whole workspace back      (anywhere in an executable)
+#
+# The key you actually press or type is derived from the definition itself —
+# tmux bindings resolve their prefix, aliases and functions give their name, and
+# a `#?tool` line names its own file. Claude commands and skills need no
+# annotation; they already carry a description.
+#
+# Usage:
+#   cheat                grouped table
+#   cheat <term>         filter on key, group or description
+#   cheat -i             fzf picker, Enter copies the key
+#   cheat --new [days]   what you added lately, straight from git (default 30)
+
+set -uo pipefail
+
+# Byte order, so the table lands the same way on every machine and `prefix /`
+# does not sort ahead of `prefix D` on one and behind it on the next.
+export LC_ALL=C
+
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+
+# Resolve through symlinks without relying on GNU readlink: every dotfile here
+# is a symlink into a repo, and git needs the real path to have any history.
+resolve() {
+    local p=$1 dir base
+    dir=$(dirname "$p")
+    base=$(basename "$p")
+    while [ -L "$p" ]; do
+        p=$(readlink "$p")
+        case "$p" in
+            /*) ;;
+            *) p="$dir/$p" ;;
+        esac
+        dir=$(dirname "$p")
+        base=$(basename "$p")
+    done
+    printf '%s/%s\n' "$(cd "$dir" 2>/dev/null && pwd -P)" "$base"
+}
+
+sources() {
+    local f
+    for f in \
+        "$HOME/.tmux.conf" \
+        "$HOME/.zshrc" \
+        "$HOME/.gitconfig" \
+        "$HOME"/.config/tmux/scripts/*.sh \
+        "$HOME"/.config/launchd/scripts/* \
+        "$HOME"/.local/bin/* \
+        "$CLAUDE_DIR"/hooks/*.sh \
+        "$CLAUDE_DIR"/statusline.sh
+    do
+        # Globs that match nothing come back literal, and ~/.local/bin holds
+        # directories and installed binaries next to the scripts — awk chokes
+        # on those, so let grep -I decide what counts as text.
+        [ -f "$f" ] || continue
+        grep -Iq . "$f" 2>/dev/null || continue
+        printf '%s\n' "$f"
+    done
+}
+
+# Emits: key \t group \t description \t source:line
+parse_file() {
+    awk -v src="$1" '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+
+    # What you press or type, read out of the definition line itself.
+    function derive(line,   s, k, prefixed, m) {
+        s = trim(line)
+        if (s ~ /^(bind|bind-key)[ \t]/) {
+            sub(/^(bind|bind-key)[ \t]+/, "", s)
+            prefixed = 1
+            while (s ~ /^-/) {
+                # -T <table> takes an argument; every other flag stands alone.
+                if (s ~ /^-T[ \t]/) {
+                    sub(/^-T[ \t]+[^ \t]+[ \t]+/, "", s)
+                } else {
+                    if (s ~ /^-[a-zA-Z]*n/) prefixed = 0
+                    sub(/^-[^ \t]+[ \t]+/, "", s)
+                }
+            }
+            k = s
+            sub(/[ \t].*$/, "", k)
+            gsub(/^['"'"'"]|['"'"'"]$/, "", k)
+            return prefixed ? "prefix " k : k
+        }
+        if (s ~ /^alias[ \t]/) {
+            sub(/^alias[ \t]+/, "", s)
+            k = s
+            sub(/=.*$/, "", k)
+            return trim(k)
+        }
+        if (match(s, /^(function[ \t]+)?[A-Za-z0-9_.-]+[ \t]*\(\)/)) {
+            k = substr(s, RSTART, RLENGTH)
+            sub(/^function[ \t]+/, "", k)
+            sub(/[ \t]*\(\).*$/, "", k)
+            return k
+        }
+        # zsh takes `function name {` without the parens too.
+        if (match(s, /^function[ \t]+[A-Za-z0-9_.-]+/)) {
+            k = substr(s, RSTART, RLENGTH)
+            sub(/^function[ \t]+/, "", k)
+            return k
+        }
+        # A tunable is worth listing under the option you set.
+        if (match(s, /@[A-Za-z0-9_-]+/)) {
+            if (s ~ /^set/) return substr(s, RSTART, RLENGTH)
+        }
+        k = s
+        sub(/[ \t].*$/, "", k)
+        return k
+    }
+
+    function emit(key, rest, line,   group, desc, override) {
+        rest = trim(rest)
+        group = rest
+        sub(/[ \t].*$/, "", group)
+        desc = trim(substr(rest, length(group) + 1))
+        if (desc == "") { desc = group; group = "misc" }
+        # `group:key` spells out the keystroke when the definition cannot: an
+        # option that turns a whole mode on says nothing about what you press.
+        if (match(group, /:/)) {
+            override = substr(group, RSTART + 1)
+            group = substr(group, 1, RSTART - 1)
+            if (override != "") key = override
+        }
+        printf "%s\t%s\t%s\t%s:%d\n", key, group, desc, src, line
+    }
+
+    # Form 3: file-level, names its own file.
+    /^[ \t]*#\?tool[ \t]/ {
+        rest = $0
+        sub(/^[ \t]*#\?tool[ \t]+/, "", rest)
+        n = split(src, parts, "/")
+        emit(parts[n], rest, NR)
+        next
+    }
+
+    # Form 2: standalone note, described by the next real line of code.
+    /^[ \t]*#\?[ \t]/ {
+        pending = $0
+        sub(/^[ \t]*#\?[ \t]+/, "", pending)
+        pending_line = NR
+        next
+    }
+
+    # Form 1: trailing note on the definition itself.
+    /#\?[ \t]/ && !/^[ \t]*#/ {
+        idx = index($0, "#?")
+        code = substr($0, 1, idx - 1)
+        rest = substr($0, idx + 2)
+        emit(derive(code), rest, NR)
+        pending = ""
+        next
+    }
+
+    {
+        if (pending != "" && trim($0) != "" && $0 !~ /^[ \t]*#/) {
+            emit(derive($0), pending, pending_line)
+            pending = ""
+        }
+    }
+    ' "$1"
+}
+
+# Claude commands and skills document themselves in frontmatter — annotating
+# them would be transcribing, and half of them live in other repos anyway.
+parse_claude() {
+    local f name desc
+    for f in "$CLAUDE_DIR"/commands/*.md; do
+        [ -f "$f" ] || continue
+        name=$(basename "$f" .md)
+        desc=$(frontmatter_desc "$f")
+        [ -n "$desc" ] || desc=$(sed -n '/^[^#-]/{s/^ *//;p;q;}' "$f")
+        printf '/%s\tclaude\t%s\t%s:1\n' "$name" "$(clip "$desc")" "$f"
+    done
+    for f in "$CLAUDE_DIR"/skills/*/SKILL.md; do
+        [ -f "$f" ] || continue
+        name=$(basename "$(dirname "$f")")
+        printf '/%s\tskill\t%s\t%s:1\n' "$name" "$(clip "$(frontmatter_desc "$f")")" "$f"
+    done
+}
+
+# `description:` is as often a folded block as a one-liner, and a bare `>` for a
+# description is worse than none at all.
+frontmatter_desc() {
+    awk '
+        NR == 1 && $0 == "---" { fm = 1; next }
+        fm && $0 == "---" { exit }
+        !fm { exit }
+        /^description:/ {
+            sub(/^description:[ \t]*/, "")
+            if ($0 == ">" || $0 == ">-" || $0 == "|" || $0 == "|-") { fold = 1; next }
+            print; exit
+        }
+        fold {
+            if ($0 ~ /^[A-Za-z_-]+:/) exit
+            sub(/^[ \t]+/, "")
+            printf "%s ", $0
+        }
+        END { if (fold) print "" }
+    ' "$1"
+}
+
+clip() {
+    printf '%s' "$1" | tr '\n' ' ' | cut -c1-96 | sed 's/ *$//'
+}
+
+collect() {
+    local f
+    while IFS= read -r f; do
+        parse_file "$f"
+    done < <(sources)
+    parse_claude
+}
+
+# Group first, then key, so the table reads as sections.
+render() {
+    sort -t$'\t' -k2,2 -k1,1 | awk -F'\t' '
+    BEGIN {
+        bold  = "\033[1m"; dim = "\033[2m"; off = "\033[0m"
+        key_c = "\033[36m"; grp_c = "\033[35;1m"
+    }
+    { k[NR] = $1; g[NR] = $2; d[NR] = $3
+      if (length($1) > w) w = length($1) }
+    END {
+        if (NR == 0) { print "no matches"; exit 1 }
+        for (i = 1; i <= NR; i++) {
+            if (g[i] != last) {
+                if (last != "") printf "\n"
+                printf "%s%s%s\n", grp_c, g[i], off
+                last = g[i]
+            }
+            printf "  %s%-*s%s  %s\n", key_c, w, k[i], off, d[i]
+        }
+    }'
+}
+
+case "${1-}" in
+    -i|--interactive)
+        command -v fzf >/dev/null 2>&1 || { echo "cheat -i needs fzf" >&2; exit 1; }
+        # Two tab-separated fields: what fzf shows, and the raw key plus source
+        # it hands back. Keeping the key out of the display column means the
+        # padding never ends up on the clipboard.
+        pick=$(collect | sort -t$'\t' -k2,2 -k1,1 | awk -F'\t' '
+            { printf "%-22s %-9s %s\t%s\t%s\n", $1, $2, $3, $1, $4 }' |
+            fzf --with-nth=1 --delimiter='\t' \
+                --prompt='cheat > ' \
+                --preview='echo {3}' --preview-window=down,1 \
+                --header='enter copies the key')
+        [ -n "$pick" ] || exit 0
+        key=$(printf '%s' "$pick" | cut -f2)
+        printf '%s' "$key" | pbcopy 2>/dev/null
+        printf '%s\n' "$key"
+        ;;
+    --new)
+        days=${2:-30}
+        # Ask each repo that backs a source what it learned lately. Added `#?`
+        # lines are exactly the things you built and have not used enough to
+        # remember yet. The whole repo is in scope, not just the files above:
+        # an annotation in a script this list does not reach is still news.
+        roots=$(while IFS= read -r f; do
+                    real=$(resolve "$f")
+                    git -C "$(dirname "$real")" rev-parse --show-toplevel 2>/dev/null
+                done < <(sources) | sort -u)
+        old_ifs=$IFS
+        IFS=$'\n'
+        fresh=$(for root in $roots; do
+                    IFS=$old_ifs
+                    git -C "$root" log --since="$days days ago" -p --unified=0 2>/dev/null |
+                        grep -E '^\+.*#\?[a-z]*[[:space:]]' |
+                        sed -E 's/.*#\?(tool)?[[:space:]]+//' |
+                        sed -E 's/^[^[:space:]]+[[:space:]]+//'
+                    IFS=$'\n'
+                done | sort -u)
+        IFS=$old_ifs
+        [ -n "$fresh" ] || { echo "nothing annotated in the last $days days"; exit 0; }
+        # Match the added notes back onto the index rather than printing the
+        # diff: the annotation carries the description, but the key lives on the
+        # definition line, which for a standalone note is not even in the hunk.
+        collect | awk -F'\t' 'NR == FNR { new[$0] = 1; next } ($3 in new)' \
+            <(printf '%s\n' "$fresh") - | render
+        ;;
+    --greet)
+        # A shell greeting has to cost nothing: --new walks the history of three
+        # repos and takes the best part of a second, so print yesterday's answer
+        # and refresh behind the prompt. Same trade as the statusline.
+        cache="${XDG_CACHE_HOME:-$HOME/.cache}/cheat-new"
+        mkdir -p "$(dirname "$cache")"
+        [ -s "$cache" ] && {
+            printf '\033[2mbuilt lately — `cheat` for the whole list\033[0m\n'
+            cat "$cache"
+            printf '\n'
+        }
+        if [ ! -f "$cache" ] || [ -n "$(find "$cache" -mmin +720 2>/dev/null)" ]; then
+            (
+                out=$("$0" --new "${2:-14}" 2>/dev/null)
+                case "$out" in
+                    nothing\ annotated*|"") : > "$cache" ;;
+                    *) printf '%s\n' "$out" > "$cache" ;;
+                esac
+            ) >/dev/null 2>&1 &
+        fi
+        ;;
+    -h|--help)
+        sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'
+        ;;
+    "")
+        collect | render
+        ;;
+    *)
+        collect | grep -i -- "$1" | render
+        ;;
+esac

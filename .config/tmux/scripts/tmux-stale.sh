@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#?tool park  auto-park windows that have gone quiet
 # Auto-park tmux windows that have gone quiet, so the tab bar decays on its own
 # instead of waiting for you to notice. Marks them @park=auto, which renders
 # amber rather than the gray of a hand-park and clears itself once you settle
