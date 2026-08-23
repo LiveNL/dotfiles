@@ -1,0 +1,64 @@
+# Ghostty config — ported from alacritty.toml 2026-08-21
+
+# --- font ---
+# Monaco: pre-Menlo macOS classic — quirky, crisp at small sizes, no bold face
+font-family = Monaco
+font-size = 12
+# macOS font smoothing, matches alacritty's heavier glyph rendering
+font-thicken = true
+
+# --- colors (same palette as alacritty) ---
+# alacritty writes raw values to the display (P3); ghostty defaults to srgb,
+# which mutes the same hex codes — match alacritty's rendering
+window-colorspace = display-p3
+# alacritty blends glyphs in gamma space — ghostty's linear-corrected default
+# renders light-on-dark text thinner/dimmer; native matches the old look
+alpha-blending = native
+background = #152528
+foreground = #e6eaea
+# bold text also picks the bright variant — headers/labels get weight AND lift
+bold-is-bright = true
+
+# normal 0-7
+palette = 0=#2f3239
+palette = 1=#e85c51
+palette = 2=#6fbf94
+palette = 3=#fda47f
+palette = 4=#5a93aa
+palette = 5=#ad5c7c
+palette = 6=#a1cdd8
+palette = 7=#ebebeb
+
+# bright 8-15
+palette = 8=#6b7089
+palette = 9=#eb746b
+palette = 10=#9ce0b4
+palette = 11=#fdb292
+palette = 12=#82b8cc
+palette = 13=#b97490
+palette = 14=#b8dfe8
+palette = 15=#f5f5f5
+
+# indexed extras
+palette = 16=#ff8349
+palette = 17=#cb7985
+
+# --- cursor ---
+cursor-style = block
+cursor-style-blink = false
+
+# --- window ---
+window-width = 140
+window-height = 40
+window-padding-x = 8
+window-padding-y = 6
+
+# --- mouse / selection ---
+mouse-hide-while-typing = true
+copy-on-select = clipboard
+# no confirmation dialog on multi-line paste — alacritty behavior
+clipboard-paste-protection = false
+
+# --- keybinds ---
+# shift+enter → ESC CR (newline in Claude Code, matches alacritty binding)
+keybind = shift+enter=text:\x1b\r

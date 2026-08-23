@@ -1,0 +1,3 @@
+#!/bin/sh
+# $BROWSER handler: send urls to terminal-browser instead of the system browser.
+exec terminal-browser open "$@"

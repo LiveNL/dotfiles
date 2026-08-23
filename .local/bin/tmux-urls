@@ -1,0 +1,33 @@
+#!/bin/sh
+# Pick a URL from the current pane and open it in terminal-browser.
+# Reads hidden OSC 8 hyperlink targets as well as plain-text URLs, so links
+# whose visible text is not the URL still show up. Runs inside a tmux popup;
+# the popup is not a pane itself, so ask tmux which pane is active.
+# popup shells skip .zshrc — make sure fzf and terminal-browser resolve
+PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+
+pane="${1:-$(tmux display -p '#{pane_id}')}"
+
+# scan every pane in the window, not just the active one — the active pane is
+# often the browser split itself, which holds no text urls
+urls=$(for p in $(tmux list-panes -t "$pane" -F '#{pane_id}'); do
+    tmux capture-pane -p -e -J -S -2000 -t "$p"
+  done \
+  | perl -ne '
+      while (/\e\]8;[^;]*;([^\e\a]+)/g)          { print "$1\n" }
+      while (m{(https?://[^\s"'\''<>\)\]\x1b]+)}g) { print "$1\n" }
+    ' \
+  | grep -E '^https?://.' \
+  | awk '!seen[$0]++')
+
+if [ -z "$urls" ]; then
+  tmux display-message "tmux-urls: no urls in pane"
+  exit 0
+fi
+
+url=$(printf '%s\n' "$urls" | tail -r | fzf --no-sort --prompt='open ▸ ') || exit 0
+
+# terminal-browser renders in the pane it starts in and needs a tty, so it
+# cannot run inside this popup (wedges) or via run-shell (no tty). Give it a
+# fresh split next to the real pane; the pane closes when the browser exits.
+tmux split-window -h -t "$pane" "PATH=\"$PATH\" terminal-browser open \"$url\""

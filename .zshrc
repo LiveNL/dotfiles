@@ -82,6 +82,7 @@ alias find_replace=find_replace
 # colors for terminal and tmux
 export TERM="xterm-256color"
 export EDITOR="nvim"
+export BROWSER="$HOME/.local/bin/tb-open"   #? zsh  cli tools open urls in terminal-browser
 alias tmux="tmux -2"   #? tmux  tmux with 256 colours forced
 
 # vim key bindings
