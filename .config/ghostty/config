@@ -62,3 +62,10 @@ clipboard-paste-protection = false
 # --- keybinds ---
 # shift+enter → ESC CR (newline in Claude Code, matches alacritty binding)
 keybind = shift+enter=text:\x1b\r
+# cmd+k → ctrl+l; ghostty's own clear_screen needs shell integration, which
+# tmux blocks — send the byte and let the shell clear, like alacritty did
+keybind = super+k=text:\x0c
+# cmd+v → ctrl+v byte: a plain paste can't carry images, but claude code reads
+# the clipboard itself on ctrl+v (text and images). tmux's root C-v binding
+# routes it: claude panes get the byte, shell panes get a text paste.
+keybind = super+v=text:\x16

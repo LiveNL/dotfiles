@@ -1,0 +1,10 @@
+#!/bin/sh
+# Paste the macOS clipboard into the current pane as bracketed text. Used by
+# the root C-v binding for shell panes; an image-only clipboard yields nothing
+# from pbpaste, so paste nothing rather than an empty buffer error.
+buf="$(pbpaste)"
+[ -n "$buf" ] || exit 0
+tmux set-buffer -b cv "$buf"
+# run-shell sets TMUX_PANE to the pane the binding fired in — paste there,
+# not in whatever pane happens to be active
+tmux paste-buffer -p -b cv -d ${TMUX_PANE:+-t "$TMUX_PANE"}
