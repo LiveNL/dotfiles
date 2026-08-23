@@ -617,6 +617,10 @@ class Translator:
         self.carry = b""
         self.stack = []
         self.link = False
+        # Whether a colour of ours is currently painted on the terminal. A
+        # style that ends without a matching entry on the stack still has to
+        # take our colour off, or the rest of the screen keeps it.
+        self.painted = False
 
     def apply(self, colors):
         self.colors = colors
@@ -637,8 +641,19 @@ class Translator:
         # underline=off the link still gets its rule, just no hue.
         color = self.colors.get("underline")
         if match.group(1):
+            # Claude Code often wraps its own 4m around the link as well. Two
+            # pushes and one pop later the stack held an underline nothing
+            # would ever close, and every style that ended after it fell back
+            # to link blue — which is how a whole answer turned blue. Only
+            # open what is not open already, and remember whether we did, so
+            # the close pops exactly what the open pushed.
             self.link = True
+            self.link_pushed = not any(n == "underline" for n, _ in self.stack)
+            if not self.link_pushed:
+                return match.group(0)
             self.stack.append(("underline", color))
+            if color:
+                self.painted = True
             on = b"\x1b[4" + (b";" + color if color else b"") + b"m"
             return match.group(0) + on
 
@@ -646,6 +661,8 @@ class Translator:
             return match.group(0)
 
         self.link = False
+        if not getattr(self, "link_pushed", True):
+            return match.group(0)
         for i in range(len(self.stack) - 1, -1, -1):
             if self.stack[i][0] == "underline":
                 del self.stack[i]
@@ -657,6 +674,18 @@ class Translator:
         if params in (b"", b"0"):
             self.stack = []
             self.link = False
+            self.painted = False
+            return match.group(0)
+
+        # A bare foreground reset has to fall back to the style still open
+        # around it, not to the terminal default. Claude Code paints inline
+        # code with a colour of its own and ends it with 39, so inside an
+        # italic quote the rest of the sentence came back white while staying
+        # italic — the quote broke at the first keyword and never recovered.
+        if params == b"39":
+            restore = self._restore()
+            if restore != b";39":
+                return b"\x1b[" + restore[1:] + b"m"
             return match.group(0)
 
         name = STYLE_ON.get(params)
@@ -668,21 +697,34 @@ class Translator:
             self.stack.append((name, color))
             if color is None:
                 return match.group(0)
+            self.painted = True
             return b"\x1b[" + params + b";" + color + b"m"
 
         name = STYLE_OFF.get(params)
         if name:
+            # Every entry of that name, not just the innermost. An extra open
+            # that slipped through leaves a twin behind, and one survivor is
+            # all it takes for the next style to fall back to its colour.
             closing = None
             for i in range(len(self.stack) - 1, -1, -1):
                 if self.stack[i][0] == name:
-                    closing = self.stack.pop(i)
-                    break
+                    popped = self.stack.pop(i)
+                    if closing is None:
+                        closing = popped
 
             # Leave the code alone when nothing coloured is involved, so a
             # colour Claude Code set itself is never reset out from under it.
+            # Once we have painted something, though, passing the code through
+            # takes the attribute off and leaves our colour on the text after
+            # it — the actual mechanism behind a whole answer going blue.
             restore = self._restore()
             if (closing is None or closing[1] is None) and restore == b";39":
-                return match.group(0)
+                if not self.painted:
+                    return match.group(0)
+                self.painted = False
+                return b"\x1b[" + params + b";39m"
+            if restore == b";39":
+                self.painted = False
             return b"\x1b[" + params + restore + b"m"
 
         return match.group(0)
