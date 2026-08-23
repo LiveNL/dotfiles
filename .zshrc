@@ -110,11 +110,17 @@ export MYPYPATH="$PYTHONPATH"
 [ -f ~/.openai_api_key ] && export OPENAI_API_KEY=$(<~/.openai_api_key)
 [ -f ~/.anthropic_api_key ] && export ANTHROPIC_API_KEY=$(<~/.anthropic_api_key)
 
+# --no-rehash: `pyenv init -` otherwise emits a blocking `pyenv rehash` that
+# every new shell runs. Rehash takes a lock on ~/.pyenv/shims/.pyenv-shim, and a
+# rehash killed mid-run leaves that file behind — after which every new shell
+# waits out PYENV_REHASH_TIMEOUT (60s) on a blank screen before its prompt
+# appears. Shims only need rebuilding after installing a python or a package
+# with an entry point, so run `pyenv rehash` by hand there.
 if command -v pyenv 1>/dev/null 2>&1; then
-  eval "$(pyenv init -)"
+  eval "$(pyenv init - --no-rehash)"
 fi
 
-bindkey '^R' history-incremental-search-backward
+bindkey '^R' history-incremental-search-backward   #? shell:C-R  incremental history search
 eval "$(rbenv init - zsh)"
 export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
 
@@ -144,14 +150,17 @@ git() {
 }
 
 # Claude Code account switching
-alias claude-work="CLAUDE_CONFIG_DIR=~/.claude-work command claude"
-alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal command claude"
+alias claude-work="CLAUDE_CONFIG_DIR=~/.claude-work command claude"   #? claude  run Claude on the work account
+alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal command claude"   #? claude  run Claude on the personal account
 
 # After a crash or a restart, say what tmux was holding — see
 # .config/tmux/scripts/tmux-restore.sh. Prints once per boot and only when a
 # pre-boot snapshot exists, so an ordinary shell pays one file test.
 if [[ -z "$TMUX" && -o interactive ]]; then
   "$HOME/.config/tmux/scripts/tmux-restore.sh" hint 2>/dev/null
+  # What you annotated in the last fortnight, from a cache the same shell
+  # refreshes in the background — the greeting itself is one `cat`.
+  cheat --greet 2>/dev/null
 fi
 
 # bun completions
