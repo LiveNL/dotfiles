@@ -12,6 +12,7 @@ follower.json
 username.json
 
 .config/1Password/
+.config/Lumina/
 .config/autostart/
 .config/com.tolaria.app/
 .config/gem/
