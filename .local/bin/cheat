@@ -11,14 +11,23 @@
 #   alias gb="git branch ..."
 #   #?tool restore  put a whole workspace back      (anywhere in an executable)
 #
+# The group may carry the key when the definition cannot spell it: `#? git:gst
+# status, short` lists it under `gst`, and quotes hold a key that has a space in
+# it — `#? restore:"tmux-restore list"  what the snapshot holds`.
+#
 # The key you actually press or type is derived from the definition itself —
 # tmux bindings resolve their prefix, aliases and functions give their name, and
 # a `#?tool` line names its own file. Claude commands and skills need no
 # annotation; they already carry a description.
 #
+# tmux's own bindings and commands come along too, read out of tmux rather than
+# copied here. They are reference, not memory-jog, so they stay out of the bare
+# table and surface on a search, in the picker, or under `cheat --tmux`.
+#
 # Usage:
-#   cheat                grouped table
-#   cheat <term>         filter on key, group or description
+#   cheat                grouped table, your own bindings only
+#   cheat <term>         filter on key, group or description, tmux defaults included
+#   cheat --tmux         everything tmux: yours, the defaults, the shell commands
 #   cheat -i             fzf picker, Enter copies the key
 #   cheat --new [days]   what you added lately, straight from git (default 30)
 
@@ -123,15 +132,26 @@ parse_file() {
 
     function emit(key, rest, line,   group, desc, override) {
         rest = trim(rest)
-        group = rest
-        sub(/[ \t].*$/, "", group)
-        desc = trim(substr(rest, length(group) + 1))
+        # `group:"key with spaces"` — the group token is otherwise cut at the
+        # first space, which is one word short of any subcommand: an override of
+        # `tmux-restore list` arrives as the key `tmux-restore` and a
+        # description starting `list`. Quotes are the only way to say the two
+        # words are one key.
+        if (match(rest, /^[A-Za-z0-9_-]+:"[^"]*"/)) {
+            group = substr(rest, 1, RLENGTH)
+            desc = trim(substr(rest, RLENGTH + 1))
+        } else {
+            group = rest
+            sub(/[ \t].*$/, "", group)
+            desc = trim(substr(rest, length(group) + 1))
+        }
         if (desc == "") { desc = group; group = "misc" }
         # `group:key` spells out the keystroke when the definition cannot: an
         # option that turns a whole mode on says nothing about what you press.
         if (match(group, /:/)) {
             override = substr(group, RSTART + 1)
             group = substr(group, 1, RSTART - 1)
+            gsub(/^"|"$/, "", override)
             if (override != "") key = override
         }
         printf "%s\t%s\t%s\t%s:%d\n", key, group, desc, src, line
@@ -212,6 +232,100 @@ frontmatter_desc() {
     ' "$1"
 }
 
+# tmux carries a note on every default binding, so `list-keys -N` is the list —
+# resolved against the live prefix, and already missing anything you rebound,
+# since your own `bind` drops the note along with the default. Nothing to keep
+# in sync, and it costs about five milliseconds.
+parse_tmux_keys() {
+    command -v tmux >/dev/null 2>&1 || return 0
+    local prefix
+    prefix=$(tmux show-options -gv prefix 2>/dev/null)
+    [ -n "$prefix" ] || prefix=C-b
+    tmux list-keys -N 2>/dev/null | awk -v pfx="$prefix" '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+    {
+        s = $0
+        # A prefixed binding reads as two tokens here, `C-a M-Left`, and says
+        # more as `prefix M-Left` — the same shape the annotated bindings take.
+        if (substr(s, 1, length(pfx) + 1) == pfx " ") {
+            s = trim(substr(s, length(pfx) + 2))
+            lead = "prefix "
+        } else {
+            lead = ""
+        }
+        key = s
+        sub(/[ \t].*$/, "", key)
+        desc = trim(substr(s, length(key) + 1))
+        # tmux writes its notes as sentences; the rest of the table does not.
+        desc = tolower(substr(desc, 1, 1)) substr(desc, 2)
+        if (desc == "") next
+        # Ten rows to say the digits pick a window is ten rows of nothing.
+        if (key ~ /^[0-9]$/ && desc ~ /^select window [0-9]$/) {
+            if (digits++) next
+            key = "0-9"
+            desc = "select a window by number"
+        }
+        printf "%s%s\ttmux-default\t%s\ttmux list-keys -N:0\n", lead, key, desc
+    }'
+}
+
+# Every command tmux knows, its alias and its flags. No prose — tmux does not
+# ship any — but the names carry themselves, and a signature is the part you
+# actually go looking for: `move-window` is easy to remember, `-s` and `-t` and
+# which of them takes the destination is not.
+parse_tmux_cmds() {
+    command -v tmux >/dev/null 2>&1 || return 0
+    tmux list-commands 2>/dev/null | awk '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+    {
+        name = $1
+        rest = trim(substr($0, length(name) + 1))
+        # `move-window (movew) [-abdkr] ...` — most commands have a short alias,
+        # some have none, and a few take no arguments at all.
+        if (substr(rest, 1, 1) == "(") {
+            close_paren = index(rest, ")")
+            alias = substr(rest, 2, close_paren - 2)
+            rest = trim(substr(rest, close_paren + 1))
+        } else {
+            alias = ""
+        }
+        if (alias != "" && rest != "") desc = alias "  " rest
+        else if (alias != "") desc = alias
+        else if (rest != "") desc = rest
+        else desc = "no arguments"
+        # The long ones run past any terminal; `man tmux` is where the full
+        # story lives anyway.
+        if (length(desc) > 96) desc = substr(desc, 1, 95) "…"
+        printf "%s\ttmux-cmd\t%s\ttmux list-commands:0\n", name, desc
+    }'
+}
+
+# The shell side has no notes either, and the signature alone does not say why
+# you would reach for one. These are the handful worth knowing by heart.
+parse_tmux_cli() {
+    while IFS='|' read -r key desc; do
+        [ -n "$key" ] || continue
+        printf '%s\ttmux-cli\t%s\ttmux:0\n' "$key" "$desc"
+    done <<'EOF'
+tmux new -s NAME|start a named session
+tmux new -ds NAME|start one in the background, without attaching
+tmux a|attach to the session you used last
+tmux a -t NAME|attach to a named session
+tmux switch-client -t NAME|move this client to another session, without detaching
+tmux ls|list sessions, with window counts
+tmux kill-session -t NAME|end one session
+tmux kill-server|end every session at once
+tmux rename-session NAME|rename the current session
+tmux source ~/.tmux.conf|reload the config without restarting
+tmux list-keys -N|every binding with its description
+tmux list-panes -a|every pane in every session, with its index
+tmux send-keys -t T KEYS|type into another pane
+tmux capture-pane -pt T|dump another pane's contents to stdout
+tmux display -p '#{...}'|print a format string for the current pane
+tmux show-options -g|every server option and its value
+EOF
+}
+
 clip() {
     printf '%s' "$1" | tr '\n' ' ' | cut -c1-96 | sed 's/ *$//'
 }
@@ -222,6 +336,11 @@ collect() {
         parse_file "$f"
     done < <(sources)
     parse_claude
+    if [ "${WITH_TMUX:-0}" = 1 ]; then
+        parse_tmux_keys
+        parse_tmux_cli
+        parse_tmux_cmds
+    fi
 }
 
 # Group first, then key, so the table reads as sections.
@@ -249,6 +368,7 @@ render() {
 case "${1-}" in
     -i|--interactive)
         command -v fzf >/dev/null 2>&1 || { echo "cheat -i needs fzf" >&2; exit 1; }
+        WITH_TMUX=1
         # Two tab-separated fields: what fzf shows, and the raw key plus source
         # it hands back. Keeping the key out of the display column means the
         # padding never ends up on the clipboard.
@@ -312,13 +432,20 @@ case "${1-}" in
             ) >/dev/null 2>&1 &
         fi
         ;;
+    --tmux)
+        # Your bindings, tmux's own, and the shell side, in one table: the three
+        # groups sort together and read as one section per source.
+        WITH_TMUX=1
+        collect | awk -F'\t' '$2 ~ /^tmux/' | render
+        ;;
     -h|--help)
-        sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'
         ;;
     "")
         collect | render
         ;;
     *)
+        WITH_TMUX=1
         collect | grep -i -- "$1" | render
         ;;
 esac

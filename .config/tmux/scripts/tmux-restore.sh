@@ -668,8 +668,8 @@ hint() {
 }
 
 case "${1:-list}" in
-    list)    shift; list_cmd "${1:-}" ;;
-    restore) shift; restore_cmd "$@" ;;
+    list)    shift; list_cmd "${1:-}" ;;   #? restore:"tmux-restore list"  what the last snapshot holds, window by window
+    restore) shift; restore_cmd "$@" ;;    #? restore:"tmux-restore restore WS"  rebuild a workspace, beside a live one of the same name
     popup)   shift; popup "$@" ;;
     hint)    hint ;;
     dismiss) touch "$STATE_DIR/restored-$(boot_time)" 2>/dev/null ;;
