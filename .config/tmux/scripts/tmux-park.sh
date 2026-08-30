@@ -135,9 +135,16 @@ restore() {
 
 # -------------------------------------------------------------------- ordering
 
-# Desired order: unparked windows keep their relative order at the low indices,
-# parked windows follow, oldest park first. Applied in two passes through a
-# scratch index range so no move ever lands on an occupied index.
+# Desired order, three bands: unparked windows keep their relative order at the
+# low indices, then auto-parked (gone stale on their own), then hand-parked.
+# Within each parked band, oldest park first.
+#
+# Stale before hand-parked because the two mean different things: a stale window
+# is one you were using and drifted away from, so it is the more likely thing to
+# come back to; a hand-park is a deliberate "not now" and belongs furthest out.
+#
+# Applied in two passes through a scratch index range so no move ever lands on an
+# occupied index.
 sort_session() {
     local session="$1"
     local rows
@@ -148,7 +155,9 @@ sort_session() {
     local want
     want=$(
         awk -F'\t' '$3 == "" { printf "%08d\t%s\n", $1, $2 }' <<<"$rows" | sort -k1,1
-        awk -F'\t' '{ if ($3 != "") { seq = ($4 == "" ? 0 : $4); printf "%019d\t%08d\t%s\n", seq, $1, $2 } }' <<<"$rows" \
+        awk -F'\t' '{ if ($3 == "auto") { seq = ($4 == "" ? 0 : $4); printf "%019d\t%08d\t%s\n", seq, $1, $2 } }' <<<"$rows" \
+            | sort -k1,1 -k2,2
+        awk -F'\t' '{ if ($3 != "" && $3 != "auto") { seq = ($4 == "" ? 0 : $4); printf "%019d\t%08d\t%s\n", seq, $1, $2 } }' <<<"$rows" \
             | sort -k1,1 -k2,2
     )
     want=$(awk -F'\t' '{ print $NF }' <<<"$want")

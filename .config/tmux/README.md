@@ -35,8 +35,15 @@ the gotchas below for why that matters here.
 
 ## Behaviour
 
-- Parked windows render dim gray with a `⏸` badge and sort to the highest indices, oldest park first.
-- Auto-stale windows render amber with a `◌` badge and clear themselves the moment you select the window.
+- The bar sorts into three bands: active windows keep their relative order at the
+  low indices, then auto-stale, then hand-parked. Each parked band is oldest park
+  first.
+- Hand-parked windows render near-background gray with a `⏸` badge — the quietest
+  thing on the bar, which is the point.
+- Auto-stale windows render rust with a `◌` badge and clear themselves the moment
+  you select the window. Rust rather than amber on purpose: amber is the Claude
+  needs-input colour, and a shared hue made the two hard to tell apart. The three
+  inactive states are separated by hue *and* lightness, not lightness alone.
 - A hand-park releases once you work in it: 30s of dwell after a fresh visit, or
   submitting a Claude prompt there. Peeking (<30s) does not reshuffle the bar,
   and background output alone never clears a hand-park.
