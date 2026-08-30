@@ -26,6 +26,21 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/record-session.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/retro-queue-notice.sh"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/end-window.sh"
           }
         ]
       }
@@ -61,6 +76,15 @@
             "command": "bash ~/.claude/hooks/busy-window.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/block-aws.sh"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -70,6 +94,10 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/busy-window.sh"
+          },
+          {
+            "type": "command",
+            "command": "echo 'STYLE (house rules, every answer): verdict first, bold, <=15 words. Evidence as tagged fence or table, not prose story. Max 3 sections, 5 bullets each, ~40 lines. Name files/values/commands explicitly, never refer back (no: as mentioned, the above fix). Plain words only, no filler. No unasked questions. Last line: **Next step:** <one action>.'"
           }
         ]
       }
@@ -114,6 +142,28 @@
           {
             "type": "command",
             "command": "script/quality --backend --lint-fix $CLAUDE_FILE_PATHS 2>&1 | tail -20"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/busy-window.sh"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/busy-window.sh"
           }
         ]
       }
