@@ -5,12 +5,14 @@
 font-family = Monaco
 font-size = 12
 # macOS font smoothing, matches alacritty's heavier glyph rendering
-font-thicken = true
+font-thicken = false
 # Monaco has no bold face; ghostty's synthesized bold smears glyphs.
-# Borrow Menlo's real bold face (Monaco's successor, near-identical metrics);
+# Borrow a real one — SF Mono's Semibold rather than Menlo's full Bold, which
+# read too heavy against Monaco once font-thicken had already added weight.
 # no-bold stays as guard so nothing ever falls back to synthesized bold
 font-synthetic-style = no-bold
 font-family-bold = Menlo
+font-style-bold = Bold
 
 # --- colors (same palette as alacritty) ---
 # alacritty writes raw values to the display (P3); ghostty defaults to srgb,
