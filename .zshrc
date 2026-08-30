@@ -82,7 +82,19 @@ alias find_replace=find_replace
 # colors for terminal and tmux
 export TERM="xterm-256color"
 export EDITOR="nvim"
-export BROWSER="$HOME/.local/bin/tb-open"   #? zsh  cli tools open urls in terminal-browser
+# BROWSER unset on purpose: with it exported, every cli that resolves a url —
+# claude code included — sent clicks into terminal-browser. Links now go to the
+# system default (Arc); prefix + u picks a url and opens it in terminal-browser,
+# which tmux-urls calls by path and does not need $BROWSER for.
+# Per command when you do want it: BROWSER="$HOME/.local/bin/tb-open" gh browse
+
+# terminal-browser guesses the device pixel ratio from the display under the
+# mouse cursor, not the display ghostty is on (session.tsx hostDisplayScale).
+# With a 1x external plus two retina screens that guess flips between 1 and 2:
+# at 2 the page gets half the CSS width, so wide pages overflow the pane and
+# pointer coordinates land at half position, which breaks scrolling too.
+# 1 is right for the 2560x1440 external; set 2 when ghostty runs on a retina screen.
+export TERMINAL_BROWSER_DISPLAY_SCALE=1   #? browser  pin terminal-browser dpi, cursor-screen guess flips
 alias tmux="tmux -2"   #? tmux  tmux with 256 colours forced
 
 # vim key bindings
@@ -153,6 +165,25 @@ git() {
 alias claude-work="CLAUDE_CONFIG_DIR=~/.claude-work command claude"   #? claude  run Claude on the work account
 alias claude-personal="CLAUDE_CONFIG_DIR=~/.claude-personal command claude"   #? claude  run Claude on the personal account
 
+# Remote Control needs feature-flag evaluation, which DISABLE_TELEMETRY in
+# ~/.claude/settings.json kills. Shell env and project settings both lose to the
+# user settings file, and `rc` rejects --settings, so the only lever is dropping
+# the key for the lifetime of the run and putting it back on exit.
+# A nested run also inherits the variable from the parent Claude process, hence
+# the unset next to the settings rewrite. The trap is double quoted on purpose:
+# the paths have to be baked in, since the locals are gone once it fires.
+claude-nt() {   #? claude  run Claude with telemetry on, so Remote Control works
+  local settings=~/.claude/settings.json backup
+  backup=$(mktemp) || return 1
+  cp "$settings" "$backup" || return 1
+  trap "cp '$backup' '$settings'; rm -f '$backup'" EXIT INT TERM
+  jq 'del(.env.DISABLE_TELEMETRY)' "$backup" > "$settings"
+  (unset DISABLE_TELEMETRY; claude-color "$@")
+  trap - EXIT INT TERM
+  cp "$backup" "$settings"
+  rm -f "$backup"
+}
+
 # After a crash or a restart, say what tmux was holding — see
 # .config/tmux/scripts/tmux-restore.sh. Prints once per boot and only when a
 # pre-boot snapshot exists, so an ordinary shell pays one file test.
@@ -169,3 +200,12 @@ fi
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+envsync() {
+  local main=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)") &&
+  local root=$(git rev-parse --show-toplevel) &&
+  [[ "$main" != "$root" ]] &&
+  cp "$main"/config/.env "$main"/config/.{development,staging,production}.env "$root"/config/ &&
+  cp "$main"/backend/config/eu-west-3-bundle.pem "$root"/backend/config/ &&
+  echo "envs copied from $main"
+}
