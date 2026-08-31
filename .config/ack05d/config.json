@@ -1,0 +1,45 @@
+{
+    "overlayCommand": "/Users/livenl/.local/bin/hud",
+    "buttons": {
+        "BTN_1": {
+            "type": "shell",
+            "command": "'/Users/livenl/Applications/Ghostty Work.app/Contents/MacOS/run'",
+            "label": "󰆍  work"
+        },
+        "BTN_2": {
+            "type": "shell",
+            "command": "'/Users/livenl/Applications/Ghostty Personal.app/Contents/MacOS/run'",
+            "label": "󰆍  personal"
+        },
+        "BTN_3": {
+            "type": "shell",
+            "command": "'/Users/livenl/Applications/iPad Connect.app/Contents/MacOS/run'",
+            "silent": true
+        },
+        "BTN_4": { "type": "shell", "command": "", "label": "K4 — vrij" },
+        "BTN_5": { "type": "shell", "command": "", "label": "K5 — vrij" },
+        "BTN_6": { "type": "shell", "command": "", "label": "K6 — vrij" },
+        "BTN_7": { "type": "shell", "command": "", "label": "K7 — vrij" },
+        "BTN_8": { "type": "shell", "command": "", "label": "K8 — vrij" },
+        "BTN_9": { "type": "shell", "command": "", "label": "K9 — vrij" },
+        "BTN_10": { "type": "shell", "command": "", "label": "K10 — vrij" },
+        "DIAL": { "type": "wheelModeCycle" }
+    },
+    "wheelModes": [
+        {
+            "name": "volume",
+            "cw": { "type": "mediaKey", "key": "volume_up" },
+            "ccw": { "type": "mediaKey", "key": "volume_down" }
+        },
+        {
+            "name": "tmux-venster",
+            "cw": { "type": "shell", "command": "/opt/homebrew/bin/tmux next-window" },
+            "ccw": { "type": "shell", "command": "/opt/homebrew/bin/tmux previous-window" }
+        },
+        {
+            "name": "zoom",
+            "cw": { "type": "keystroke", "keystroke": "cmd+=" },
+            "ccw": { "type": "keystroke", "keystroke": "cmd+-" }
+        }
+    ]
+}
