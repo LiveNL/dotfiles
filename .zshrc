@@ -79,8 +79,9 @@ function find_replace() {
 alias find_replace=find_replace
 
 
-# colors for terminal and tmux
-export TERM="xterm-256color"
+# colors outside tmux only — inside, tmux sets tmux-256color and clobbering it
+# misreports capabilities to apps (claude code's renderer among them)
+[[ -z $TMUX ]] && export TERM="xterm-256color"
 export EDITOR="nvim"
 # BROWSER unset on purpose: with it exported, every cli that resolves a url —
 # claude code included — sent clicks into terminal-browser. Links now go to the
