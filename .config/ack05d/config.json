@@ -3,26 +3,26 @@
     "buttons": {
         "BTN_1": {
             "type": "shell",
-            "command": "'/Users/livenl/Applications/Ghostty Work.app/Contents/MacOS/run'",
-            "label": "󰆍  work"
-        },
-        "BTN_2": {
-            "type": "shell",
-            "command": "'/Users/livenl/Applications/Ghostty Personal.app/Contents/MacOS/run'",
-            "label": "󰆍  personal"
-        },
-        "BTN_3": {
-            "type": "shell",
             "command": "'/Users/livenl/Applications/iPad Connect.app/Contents/MacOS/run'",
             "silent": true
         },
-        "BTN_4": { "type": "shell", "command": "", "label": "K4 — vrij" },
+        "BTN_2": { "type": "shell", "command": "", "label": "K2 — vrij" },
+        "BTN_3": { "type": "shell", "command": "", "label": "K3 — vrij" },
+        "BTN_4": {
+            "type": "shell",
+            "command": "'/Users/livenl/Applications/Ghostty Personal.app/Contents/MacOS/run'",
+            "label": "󰆍   personal"
+        },
         "BTN_5": { "type": "shell", "command": "", "label": "K5 — vrij" },
         "BTN_6": { "type": "shell", "command": "", "label": "K6 — vrij" },
         "BTN_7": { "type": "shell", "command": "", "label": "K7 — vrij" },
-        "BTN_8": { "type": "shell", "command": "", "label": "K8 — vrij" },
+        "BTN_8": {
+            "type": "shell",
+            "command": "'/Users/livenl/Applications/Ghostty Work.app/Contents/MacOS/run'",
+            "label": "󰆍   work"
+        },
         "BTN_9": { "type": "shell", "command": "", "label": "K9 — vrij" },
-        "BTN_10": { "type": "shell", "command": "", "label": "K10 — vrij" },
+        "BTN_10": { "type": "battery", "label": "ACK05" },
         "DIAL": { "type": "wheelModeCycle" }
     },
     "wheelModes": [
