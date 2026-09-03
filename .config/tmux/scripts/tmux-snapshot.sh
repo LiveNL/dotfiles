@@ -39,7 +39,7 @@ SEP=$'\037'
 
 # Pane rows, not window rows: splits are part of the layout, and the Claude
 # session id is a pane option. Window-level options resolve fine from a pane.
-FIELDS="#{session_name}${SEP}#{window_index}${SEP}#{window_name}${SEP}#{window_active}${SEP}#{@park}${SEP}#{@park-note}${SEP}#{pane_index}${SEP}#{pane_active}${SEP}#{pane_current_path}${SEP}#{pane_current_command}${SEP}#{@claude-session}"
+FIELDS="#{session_name}${SEP}#{window_index}${SEP}#{window_name}${SEP}#{window_active}${SEP}#{@park}${SEP}#{@park-note}${SEP}#{pane_index}${SEP}#{pane_active}${SEP}#{pane_current_path}${SEP}#{pane_current_command}${SEP}#{@claude-session}${SEP}#{window_layout}"
 
 gopt() {
     local val
@@ -100,9 +100,11 @@ preserve_pre_boot() {
 }
 
 # What counts as the layout, for the purpose of deciding a snapshot is new:
-# everything except window_active, pane_active and pane_current_command.
+# everything except window_active, pane_active, pane_current_command and the
+# layout string — that one carries pane sizes, so every terminal resize would
+# otherwise count as a change.
 signature() {
-    awk -F"$SEP" -v OFS="$SEP" '!/^#/ { $4 = ""; $8 = ""; $10 = ""; print }'
+    awk -F"$SEP" -v OFS="$SEP" '!/^#/ { $4 = ""; $8 = ""; $10 = ""; $12 = ""; print }'
 }
 
 snap() {

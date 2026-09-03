@@ -78,6 +78,27 @@ human_gap() {
     fi
 }
 
+# The daemon only takes the pre-boot copy on its first sweep, and the daemon
+# only runs inside tmux. After a crash there is no tmux until the restore starts
+# one — so the copy would be taken by the restore's own new-session hook, at
+# which point latest.tsv is already being overwritten under the restore's feet.
+# The first run lost all but two windows that way. Taking the copy here, before
+# any window exists, is what makes the first restore after a reboot read the
+# same file as the second.
+ensure_pre_boot() {
+    local boot pre stamp
+    boot=$(boot_time)
+    [ "$boot" != 0 ] || return 0
+
+    pre="$STATE_DIR/pre-boot-$boot.tsv"
+    [ -e "$pre" ] && return 0
+    [ -f "$STATE_DIR/latest.tsv" ] || return 0
+
+    stamp=$(stamp_of "$STATE_DIR/latest.tsv")
+    [ "$stamp" -lt "$boot" ] || return 0
+    cp "$STATE_DIR/latest.tsv" "$pre" 2>/dev/null
+}
+
 # Which snapshot to read. The pre-boot copy wins whenever it exists and still
 # holds something: after a crash that is the only file describing the layout you
 # lost, while latest.tsv has already been overwritten by this boot's tmux.
@@ -87,6 +108,8 @@ resolve_source() {
         printf '%s' "$explicit"
         return 0
     fi
+
+    ensure_pre_boot
 
     local pre="$STATE_DIR/pre-boot-$(boot_time).tsv"
     if [ -s "$pre" ]; then
@@ -339,18 +362,19 @@ has_transcript() {
 }
 
 # Everything a window needs, replayed in the order tmux wants it. Panes are
-# recreated with `split-window`, not by replaying a layout string — a snapshot
-# taken at a different terminal size puts such a layout back wrong, and pane
-# sizes are the one part nobody misses.
+# recreated with `split-window` in pane-index order and the saved layout string
+# is applied on top — tmux rescales it to the current window size, so a snapshot
+# from a different terminal size still puts the splits back the right way round.
 restore_window() {
     local file="$1" sess="$2" widx="$3" wname="$4" park="$5" note="$6" target="$7"
     local dry="$8" run="$9"
 
-    local rows first_cwd first_sid wid cmd
+    local rows first_cwd first_sid layout wid cmd
     rows=$(awk -F"$SEP" -v s="$sess" -v i="$widx" '$1 == s && $2 == i' "$file" | sort -t"$SEP" -k7,7n)
     [ -n "$rows" ] || return 0
     first_cwd=$(head -1 <<<"$rows" | awk -F"$SEP" '{ print $9 }')
     first_sid=$(head -1 <<<"$rows" | awk -F"$SEP" '{ print $11 }')
+    layout=$(head -1 <<<"$rows" | awk -F"$SEP" '{ print $12 }')
 
     cmd=""
     if [ -n "$run" ] && [ -n "$first_sid" ] && has_transcript "$first_sid"; then
@@ -378,7 +402,7 @@ restore_window() {
     fi
 
     local n=0
-    while IFS="$SEP" read -r _ _ _ _ _ _ _ _ cwd _ sid; do
+    while IFS="$SEP" read -r _ _ _ _ _ _ _ _ cwd _ sid _; do
         [ -n "${cwd:-}" ] || continue
         n=$(( n + 1 ))
 
@@ -410,7 +434,12 @@ restore_window() {
     [ -n "$dry" ] && return 0
     [ -n "$wid" ] || return 0
 
-    [ "$n" -gt 1 ] && tmux select-layout -t "$wid" tiled >/dev/null 2>&1
+    # Snapshots from before the layout column existed, or a pane count that no
+    # longer matches the string, fall back to tiled.
+    if [ "$n" -gt 1 ]; then
+        [ -n "$layout" ] && tmux select-layout -t "$wid" "$layout" >/dev/null 2>&1 \
+            || tmux select-layout -t "$wid" tiled >/dev/null 2>&1
+    fi
 
     # Park state is carried over so a workspace comes back with the same windows
     # dimmed and pushed right, rather than presenting twelve equal tabs.
@@ -441,6 +470,15 @@ restore_cmd() {
         echo "no snapshot to restore from"
         return 1
     fi
+
+    # restore_window re-reads the source once per window, and creating the
+    # first window fires the snapshot hook that rewrites latest.tsv. Read from
+    # a frozen copy so the file cannot change under the loop.
+    local frozen
+    frozen=$(mktemp "${TMPDIR:-/tmp}/tmux-restore-src.XXXXXX") || return 1
+    cp "$file" "$frozen" || return 1
+    file="$frozen"
+    trap 'rm -f "$frozen"' RETURN
 
     local sessions
     sessions=$(windows_of "$file" | awk -F"$SEP" '{ print $1 }' | awk '!seen[$0]++')
@@ -637,6 +675,7 @@ hint() {
     pre="$STATE_DIR/pre-boot-$boot.tsv"
     marker="$STATE_DIR/hinted-$boot"
 
+    ensure_pre_boot
     [ -s "$pre" ] || return 0
     [ -e "$marker" ] && return 0
     [ -e "$STATE_DIR/restored-$boot" ] && return 0
