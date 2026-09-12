@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "cleanupPeriodDays": 14,
+  "cleanupPeriodDays": 90,
   "env": {
     "DEBUG_CLAUDE_HOOKS": "1",
     "CLAUDISH_MODEL": "gemma4:26b-mlx",
@@ -10,15 +10,20 @@
   "permissions": {
     "allow": [
       "Bash(op run --env-file=$HOME/.langfuse.env --no-masking -- langfuse api *)",
-      "Bash(op run --env-file=/Users/livenl/.langfuse.env --no-masking -- langfuse api *)"
+      "Bash(op run --env-file=/Users/livenl/.langfuse.env --no-masking -- langfuse api *)",
+      "Bash(bash /Users/livenl/.claude/skills/rn/rename.sh *)"
     ]
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus[1m]",
   "hooks": {
     "SessionStart": [
       {
         "matcher": "",
         "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/share-sessions.sh"
+          },
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/reset-window.sh"
@@ -94,10 +99,6 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/busy-window.sh"
-          },
-          {
-            "type": "command",
-            "command": "echo 'STYLE (house rules, every answer): verdict first, bold, <=15 words. Evidence as tagged fence or table, not prose story. Max 3 sections, 5 bullets each, ~40 lines. Name files/values/commands explicitly, never refer back (no: as mentioned, the above fix). Plain words only, no filler. No unasked questions. Last line: **Next step:** <one action>.'"
           }
         ]
       }
@@ -179,7 +180,7 @@
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
-    "caveman@caveman": true,
+    "caveman@caveman": false,
     "swift-lsp@claude-plugins-official": true,
     "claude-security@claude-plugins-official": true,
     "claudish-to-english@gvzdv-plugins": false
@@ -205,6 +206,11 @@
     }
   },
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "high"
+    }
+  },
   "tui": "fullscreen",
   "voice": {
     "enabled": false,
