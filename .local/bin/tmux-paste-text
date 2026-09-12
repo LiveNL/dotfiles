@@ -1,10 +1,25 @@
 #!/bin/sh
 # Paste the macOS clipboard into the current pane as bracketed text. Used by
-# the root C-v binding for shell panes; an image-only clipboard yields nothing
-# from pbpaste, so paste nothing rather than an empty buffer error.
+# the root C-v binding for panes whose current command looks like a shell.
+#
+# tmux reports the pane's process-group leader as pane_current_command. A pane
+# that runs `claude ...; exec "$SHELL"` (tmux-restore.sh) keeps zsh as leader
+# while claude runs, so the binding lands here although claude needs the raw
+# C-v byte to read the clipboard itself (text and images). Look for claude on
+# the pane's tty first and hand the byte through in that case.
+pane=${TMUX_PANE:+-t "$TMUX_PANE"}
+tty=$(tmux display -p $pane '#{pane_tty}')
+if ps -o comm= -t "${tty#/dev/}" 2>/dev/null | grep -q '\(^\|/\)claude$'; then
+  tmux send-keys $pane C-v
+  exit 0
+fi
+
+# An image-only clipboard yields nothing from pbpaste, so paste nothing rather
+# than an empty buffer error.
 buf="$(pbpaste)"
 [ -n "$buf" ] || exit 0
 tmux set-buffer -b cv "$buf"
+
 # run-shell sets TMUX_PANE to the pane the binding fired in — paste there,
 # not in whatever pane happens to be active
-tmux paste-buffer -p -b cv -d ${TMUX_PANE:+-t "$TMUX_PANE"}
+tmux paste-buffer -p -b cv -d $pane
