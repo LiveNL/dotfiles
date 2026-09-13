@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/share-sessions.sh"
+            "command": "bash ~/.claude/hooks-private/share-sessions.sh"
           },
           {
             "type": "command",
@@ -34,7 +34,7 @@
           },
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/retro-queue-notice.sh"
+            "command": "bash ~/.claude/hooks-private/retro-queue-notice.sh"
           }
         ]
       }
@@ -71,7 +71,7 @@
           },
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/retro-nudge.sh"
+            "command": "bash ~/.claude/hooks-private/retro-nudge.sh"
           }
         ]
       }
@@ -91,7 +91,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/block-aws.sh"
+            "command": "bash ~/.claude/hooks-private/block-aws.sh"
           }
         ]
       }
