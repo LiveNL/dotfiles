@@ -316,6 +316,7 @@ tmux ls|list sessions, with window counts
 tmux kill-session -t NAME|end one session
 tmux kill-server|end every session at once
 tmux rename-session NAME|rename the current session
+/rn [slug]|rename this Claude session as <tmux window>-<slug>
 tmux source ~/.tmux.conf|reload the config without restarting
 tmux list-keys -N|every binding with its description
 tmux list-panes -a|every pane in every session, with its index
