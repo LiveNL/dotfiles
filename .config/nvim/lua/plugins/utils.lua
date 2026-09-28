@@ -80,27 +80,75 @@ M.toggle_lazygit = function()
 	lazygit:toggle()
 end
 
--- when grepping, cd to the project root directory first
+-- Search the tree the open file lives in, not the one nvim was started in.
+--  Asking git from the buffer's own directory also covers worktrees, where
+--  .git is a file and finddir would walk straight past it.
+M.project_root = function()
+	local dir = vim.fn.expand("%:p:h")
+	if dir == "" then
+		dir = vim.fn.getcwd()
+	end
+
+	local root = vim.fn.systemlist({ "git", "-C", dir, "rev-parse", "--show-toplevel" })[1]
+	if vim.v.shell_error ~= 0 or root == nil or root == "" then
+		return nil
+	end
+
+	return root
+end
+
+-- Jump between the worktrees of the repo you are in. Picking one sets the
+--  tab's directory, so the finder, grep and lsp all follow it from then on.
+M.switch_worktree = function()
+	local dir = vim.fn.expand("%:p:h")
+	if dir == "" then
+		dir = vim.fn.getcwd()
+	end
+
+	local lines = vim.fn.systemlist({ "git", "-C", dir, "worktree", "list", "--porcelain" })
+	if vim.v.shell_error ~= 0 then
+		vim.notify("Not inside a git repository", vim.log.levels.WARN)
+		return
+	end
+
+	local worktrees = {}
+	for _, line in ipairs(lines) do
+		local path = line:match("^worktree (.+)$")
+		if path and vim.fn.isdirectory(path) == 1 then
+			table.insert(worktrees, path)
+		end
+	end
+
+	if #worktrees < 2 then
+		vim.notify("This repository has only one worktree", vim.log.levels.INFO)
+		return
+	end
+
+	vim.ui.select(worktrees, { prompt = "Worktree" }, function(choice)
+		if choice == nil then
+			return
+		end
+
+		local ok, err = pcall(vim.cmd, "tcd " .. vim.fn.fnameescape(choice))
+		if not ok then
+			vim.notify(tostring(err), vim.log.levels.ERROR)
+			return
+		end
+
+		vim.notify("cwd: " .. choice)
+	end)
+end
+
+M.find_files_from_project_root = function()
+	local root = M.project_root()
+
+	require("telescope.builtin").find_files(root and { cwd = root } or {})
+end
+
 M.live_grep_from_project_root = function()
-	local function is_git_repo()
-		vim.fn.system("git rev-parse --is-inside-work-tree")
-		return vim.v.shell_error == 0
-	end
+	local root = M.project_root()
 
-	local function get_git_root()
-		local dot_git_path = vim.fn.finddir(".git", ".;")
-		return vim.fn.fnamemodify(dot_git_path, ":h")
-	end
-
-	local opts = {}
-
-	if is_git_repo() then
-		opts = {
-			cwd = get_git_root(),
-		}
-	end
-
-	require("telescope.builtin").live_grep(opts)
+	require("telescope.builtin").live_grep(root and { cwd = root } or {})
 end
 
 -- luasnip: insert visual selection into dynamic node

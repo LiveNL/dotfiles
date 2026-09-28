@@ -29,7 +29,15 @@ local header = get_header({
 
 require("mini.align").setup()
 
-require("mini.starter").setup({
+local starter = require("mini.starter")
+
+-- The same file name lives in several worktrees of one repo, so every recent
+--  file carries its path, and the tree you are in gets its own section first.
+local function recent_path(path)
+	return string.format(" (%s)", vim.fn.fnamemodify(path, ":~:h"))
+end
+
+starter.setup({
 	-- Whether to open starter buffer on VimEnter. Not opened if Neovim was
 	-- started with intent to show something else.
 	autoopen = true,
@@ -42,7 +50,11 @@ require("mini.starter").setup({
 	-- - Function: should return one of these three categories.
 	-- - Array: elements of these three types (i.e. item, array, function).
 	-- If `nil` (default), default items will be used (see |mini.starter|).
-	items = nil,
+	items = {
+		starter.sections.recent_files(5, true, recent_path),
+		starter.sections.recent_files(5, false, recent_path),
+		starter.sections.builtin_actions(),
+	},
 
 	-- Header to be displayed before items. Converted to single string via
 	-- `tostring` (use `\n` to display several lines). If function, it is

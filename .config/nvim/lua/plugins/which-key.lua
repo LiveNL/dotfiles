@@ -110,14 +110,33 @@ return function()
 		{ "<leader>f", group = "Telescope functions" },
 		{ "<leader>fc", "<cmd>Telescope commands<cr>", desc = "Find commands" },
 		{ "<leader>fd", "<cmd>Telescope diagnostics<cr>", desc = "Find diagnostics issues" },
-		{ "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
+		{
+			"<leader>ff",
+			function()
+				require("plugins.utils").find_files_from_project_root()
+			end,
+			desc = "Find files",
+		},
 		{ "<leader>fgb", "<cmd>Telescope git_branches<cr>", desc = "Find git branches" },
 		{ "<leader>fgc", "<cmd>Telescope git_commits<cr>", desc = "Find git commits" },
 		{ "<leader>fgo", "<cmd>Telescope git_stash<cr>", desc = "Find git stash" },
 		{ "<leader>fgr", "<cmd>Telescope git_bcommits<cr>", desc = "Find git bcommits" },
 		{ "<leader>fgs", "<cmd>Telescope git_status<cr>", desc = "Find git status" },
 		{ "<leader>fh", "<cmd>Telescope command history<cr>", desc = "Find command history" },
-		{ "<leader>fl", "<cmd>Telescope live_grep<cr>", desc = "Find live grep" },
+		{
+			"<leader>ft",
+			function()
+				require("plugins.utils").switch_worktree()
+			end,
+			desc = "Find git worktree, and cd to it",
+		},
+		{
+			"<leader>fl",
+			function()
+				require("plugins.utils").live_grep_from_project_root()
+			end,
+			desc = "Find live grep",
+		},
 		{ "<leader>fw", "<cmd>Telescope grep_string<cr>", desc = "Find grep string" },
 
 		{ "<leader>k", ":!black -q -<CR>", group = "black", mode = "v" },
