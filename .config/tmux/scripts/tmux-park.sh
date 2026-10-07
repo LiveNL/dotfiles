@@ -12,6 +12,16 @@
 #   @park-home   index it sat at before parking, so unparking puts it back
 #   @park-note   optional free text, shown in the picker
 #   @park-touch  epoch seconds the window last had your attention
+#   @park-origin session a hand-parked window was moved out of, empty when the
+#                window is parked in place (auto-park) or active
+#   @park-resume pane option: the Claude session stopped when the window was
+#                parked, `-` for one with no transcript yet
+#
+# A hand-park moves the window out of the tab row into its own session
+# (@park-session, default `paused`) and stops any Claude in it; unparking moves
+# it back and resumes those conversations. An auto-park only marks the window in
+# place: it releases itself when the window's output changes, which a stopped
+# Claude would never do.
 #
 # Rendering is owned by window-status-format in ~/.tmux.conf. This script owns
 # the state, the ordering, and the on-disk mirror.
@@ -54,6 +64,73 @@ gopt() {
 }
 
 set_opt() { tmux set-option -w -t "$2" "$1" "$3" 2>/dev/null; }
+
+paused_session() {
+    local s
+    s=$(tmux show-options -gqv @park-session 2>/dev/null)
+    printf '%s' "${s:-paused}"
+}
+
+# The tmux server's PATH can be missing ~/.local/bin when it was started long
+# ago from a login shell, and a pane given a bare `claude` then reports not found.
+claude_bin() {
+    if [ -x "$HOME/.local/bin/claude" ]; then
+        printf '%s' "$HOME/.local/bin/claude"
+    else
+        command -v claude 2>/dev/null || printf 'claude'
+    fi
+}
+
+# The Claude process in a pane. It sits a few levels down — under the
+# claude-color wrapper, or a `zsh -c` that runs it — so this walks descendants.
+pane_claude_pid() {
+    local root
+    root=$(tmux display-message -p -t "$1" '#{pane_pid}' 2>/dev/null) || return 1
+    ps -Ao pid=,ppid=,comm= | awk -v root="$root" '
+        { kids[$2] = kids[$2] " " $1; comm[$1] = $3 }
+        function is_claude(c) { return (c ~ /(^|\/)claude$/ || c ~ /\/versions\/[0-9]/) }
+        function walk(p, d,   n, a, i) {
+            if (d > 8) return 0
+            if (is_claude(comm[p])) { print p; return 1 }
+            n = split(kids[p], a, " ")
+            for (i = 1; i <= n; i++) if (a[i] != "" && walk(a[i], d + 1)) return 1
+            return 0
+        }
+        END { walk(root, 0) }'
+}
+
+# The conversation a pane is running. @claude-session accumulates one id per
+# SessionStart, so the last one is the live one; the process's own arguments
+# are the fallback for a session that started before the hook existed.
+pane_claude_session() {
+    local pane="$1" pid="$2" sid
+    sid=$(tmux show-options -pqv -t "$pane" @claude-session 2>/dev/null)
+    sid=${sid##* }
+    if [ -z "$sid" ]; then
+        sid=$(ps -p "$pid" -o command= 2>/dev/null \
+            | sed -nE 's/.*--(session-id|resume) ([0-9a-f-]{36}).*/\2/p' | head -1)
+    fi
+    printf '%s' "$sid"
+}
+
+has_transcript() {
+    ls -1 "$HOME"/.claude/projects/*/"$1".jsonl >/dev/null 2>&1
+}
+
+# Creates a missing session and prints the id of the shell window tmux puts in
+# every new session, for the caller to close once its own window has landed.
+# detach-on-destroy off: moving the last window out of a session destroys it,
+# and the client looking at it would otherwise detach instead of switching.
+ensure_session() {
+    local name="$1"
+    if ! tmux has-session -t "=$name" 2>/dev/null; then
+        tmux new-session -d -P -F '#{window_id}' -s "$name" 2>/dev/null
+    fi
+    tmux set-option -t "=$name:" detach-on-destroy off 2>/dev/null
+}
+
+# Only for refusals. Parking itself stays silent (see toggle).
+say() { tmux display-message -d 2500 "$1" 2>/dev/null; }
 
 # Epoch seconds are too coarse: park two windows in the same second and the tie
 # breaks on current index, which the previous sort already moved. A server-wide
@@ -191,7 +268,7 @@ sort_session() {
     # below cannot bounce back into touch → unpark → sort.
     tmux set-option -g @park-busy 1 2>/dev/null
 
-    local max base i
+    local max base i id
     max=$(tmux list-windows -t "$session" -F '#{window_index}' 2>/dev/null | sort -n | tail -1)
     base=$(( max + 100 ))
 
@@ -261,6 +338,11 @@ park() {
 unpark() {
     local session="$1" id="$2"
 
+    if [ -n "$(opt @park-origin "$id")" ]; then
+        unpark_back "$id"
+        return 0
+    fi
+
     local home current
     home=$(opt @park-home "$id")
     current=$(tmux display-message -p -t "$session" '#{window_id}' 2>/dev/null)
@@ -295,16 +377,183 @@ unpark() {
     tmux refresh-client -S 2>/dev/null
 }
 
+# Stop Claude in a pane, remembering what to resume. A Claude whose
+# conversation cannot be named is left running: stopping it would lose the way
+# back.
+stop_claude() {
+    local pane="$1" pid sid i
+
+    pid=$(pane_claude_pid "$pane")
+    [ -n "$pid" ] || return 0
+
+    sid=$(pane_claude_session "$pane" "$pid")
+    [ -n "$sid" ] || return 0
+    has_transcript "$sid" || sid="-"
+    tmux set-option -p -t "$pane" @park-resume "$sid" 2>/dev/null
+
+    # A pane started as plain `claude`, with no shell after it, dies with its
+    # process. remain-on-exit keeps it long enough to get a shell back.
+    tmux set-option -p -t "$pane" remain-on-exit on 2>/dev/null
+
+    # SIGTERM, not keystrokes: Ctrl-C first clears a half-typed prompt and only
+    # exits on a later press, so the number needed depends on the input box.
+    # Claude writes its transcript per message, so nothing is lost.
+    kill -TERM "$pid" 2>/dev/null
+    for (( i = 0; i < 50; i++ )); do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 0.1
+    done
+    kill -0 "$pid" 2>/dev/null && kill -KILL "$pid" 2>/dev/null
+
+    sleep 0.2
+    if [ "$(tmux display-message -p -t "$pane" '#{pane_dead}' 2>/dev/null)" = "1" ]; then
+        tmux respawn-pane -k -t "$pane" "$(tmux show-options -gqv default-shell 2>/dev/null || echo "$SHELL")" 2>/dev/null
+    fi
+    tmux set-option -pu -t "$pane" remain-on-exit 2>/dev/null
+    tmux set-option -pu -t "$pane" @claude-pane-state 2>/dev/null
+}
+
+# Hand-park: stop Claude, move the window out of the tab row into the paused
+# session. Refused while Claude is mid-turn, since stopping it then throws the
+# turn away.
+park_away() {
+    local session="$1" id="$2" note="${3:-}"
+    local dest
+    dest=$(paused_session)
+
+    [ "$session" = "$dest" ] && return 0
+
+    if [ "$(tmux list-windows -t "=$session" 2>/dev/null | grep -c .)" -le 1 ]; then
+        say "last window in $session, nothing to park it away from"
+        return 0
+    fi
+
+    local pane busy=""
+    while IFS= read -r pane; do
+        [ "$(tmux show-options -pqv -t "$pane" @claude-pane-state 2>/dev/null)" = "running" ] && busy=1
+    done < <(tmux list-panes -t "$id" -F '#{pane_id}' 2>/dev/null)
+    if [ -n "$busy" ]; then
+        say "Claude is busy in this window, park it when the turn is done"
+        return 0
+    fi
+
+    local home
+    home=$(tmux display-message -p -t "$id" '#{window_index}' 2>/dev/null)
+
+    # Watch token first, as in park(): a dwell watcher from before the park must
+    # not release it.
+    tmux \
+        set-option -w -t "$id" @park-watch "" ";" \
+        set-option -w -t "$id" @park 1 ";" \
+        set-option -w -t "$id" @park-at "$(now)" ";" \
+        set-option -w -t "$id" @park-seq "$(next_seq)" ";" \
+        set-option -w -t "$id" @park-home "$home" ";" \
+        set-option -w -t "$id" @park-note "$note" ";" \
+        set-option -w -t "$id" @park-origin "$session" 2>/dev/null
+
+    while IFS= read -r pane; do
+        stop_claude "$pane"
+    done < <(tmux list-panes -t "$id" -F '#{pane_id}' 2>/dev/null)
+
+    local placeholder
+    placeholder=$(ensure_session "$dest")
+
+    tmux set-option -g @park-busy 1 2>/dev/null
+    tmux move-window -d -s "$id" -t "=$dest:" 2>/dev/null
+    [ -n "$placeholder" ] && tmux kill-window -t "$placeholder" 2>/dev/null
+    tmux set-option -g @park-busy 0 2>/dev/null
+
+    sort_session "$session"
+    sort_session "$dest"
+    dump_state "$session"
+    dump_state "$dest"
+    tmux refresh-client -S 2>/dev/null
+}
+
+# Move a hand-parked window back to the session it came from, at the index it
+# left, and resume the conversations stopped on the way out. Whoever is looking
+# at the window goes along with it — prefix + P on it, or a prompt typed into a
+# Claude started there by hand (busy-window.sh unparks on that) — rather than
+# watching it vanish from the paused session. `follow` adds a client that is not
+# looking at it yet.
+unpark_back() {
+    local id="$1" follow="${2:-}" client="${3:-}"
+    local origin home dest
+    origin=$(opt @park-origin "$id")
+    home=$(opt @park-home "$id")
+    dest=$(paused_session)
+
+    local viewers
+    viewers=$(tmux list-clients -F "#{client_name}${SEP}#{window_id}" 2>/dev/null \
+        | awk -F"$SEP" -v w="$id" '$2 == w { print $1 }')
+    if [ -n "$follow" ] && [ -n "$client" ]; then
+        viewers=$(printf '%s\n%s' "$viewers" "$client")
+    fi
+
+    local placeholder
+    placeholder=$(ensure_session "$origin")
+
+    tmux \
+        set-option -w -t "$id" @park "" ";" \
+        set-option -w -t "$id" @park-at "" ";" \
+        set-option -w -t "$id" @park-seq "" ";" \
+        set-option -w -t "$id" @park-home "" ";" \
+        set-option -w -t "$id" @park-note "" ";" \
+        set-option -w -t "$id" @park-origin "" ";" \
+        set-option -w -t "$id" @park-touch "$(now)" 2>/dev/null
+
+    # -b only when something sits at that index: against an empty index tmux
+    # does not append, it drops the window at the front of the session.
+    tmux set-option -g @park-busy 1 2>/dev/null
+    if [ -n "$home" ] && tmux list-windows -t "=$origin" -F '#{window_index}' 2>/dev/null | grep -qx "$home"; then
+        tmux move-window -b -d -s "$id" -t "=$origin:$home" 2>/dev/null
+    else
+        tmux move-window -d -s "$id" -t "=$origin:" 2>/dev/null
+    fi
+    [ -n "$placeholder" ] && tmux kill-window -t "$placeholder" 2>/dev/null
+    tmux set-option -g @park-busy 0 2>/dev/null
+
+    local pane sid bin
+    bin=$(claude_bin)
+    while IFS= read -r pane; do
+        sid=$(tmux show-options -pqv -t "$pane" @park-resume 2>/dev/null)
+        [ -n "$sid" ] || continue
+        tmux set-option -pu -t "$pane" @park-resume 2>/dev/null
+        [ -n "$(pane_claude_pid "$pane")" ] && continue
+        if [ "$sid" = "-" ]; then
+            tmux send-keys -t "$pane" "$bin" Enter 2>/dev/null
+        else
+            tmux send-keys -t "$pane" "$bin --resume $sid" Enter 2>/dev/null
+        fi
+    done < <(tmux list-panes -t "$id" -F '#{pane_id}' 2>/dev/null)
+
+    sort_session "$origin"
+    dump_state "$origin"
+    if tmux has-session -t "=$dest" 2>/dev/null; then
+        sort_session "$dest"
+        dump_state "$dest"
+    fi
+
+    local c
+    while IFS= read -r c; do
+        [ -n "$c" ] || continue
+        tmux switch-client -c "$c" -t "=$origin" ";" select-window -t "$id" 2>/dev/null
+    done < <(printf '%s\n' "$viewers" | awk '!seen[$0]++')
+    tmux refresh-client -S 2>/dev/null
+}
+
 # Deliberately silent: message-style here is a light background, so a
 # display-message on every park flashes the whole status line white. The badge
 # appearing and the window sliding right is the confirmation.
 toggle() {
-    local session="$1" id="$2" note="${3:-}"
+    local session="$1" id="$2" note="${3:-}" client="${4:-}"
 
-    if [ -n "$(opt @park "$id")" ]; then
+    if [ -n "$(opt @park-origin "$id")" ]; then
+        unpark_back "$id" follow "$client"
+    elif [ -n "$(opt @park "$id")" ]; then
         unpark "$session" "$id"
     else
-        park "$session" "$id" 1 "$note"
+        park_away "$session" "$id" "$note"
     fi
 }
 
@@ -325,6 +574,10 @@ touch_window() {
     local session="$1" id="$2"
 
     [ "$(tmux show-options -gqv @park-busy 2>/dev/null)" = "1" ] && return 0
+
+    # Browsing the paused session is not resuming anything: unparking from there
+    # moves the window and restarts Claude, so it only happens when asked.
+    [ -n "$(opt @park-origin "$id")" ] && return 0
 
     local dwell
     dwell=$(gopt @park-dwell-secs 30)
@@ -364,14 +617,61 @@ touch_window() {
 note() {
     local session="$1" id="$2" text="${3:-}"
 
-    set_opt @park-note "$id" "$text"
-    [ -n "$(opt @park "$id")" ] || park "$session" "$id" 1 "$text"
+    if [ -n "$(opt @park "$id")" ]; then
+        set_opt @park-note "$id" "$text"
+    else
+        park_away "$session" "$id" "$text"
+        return 0
+    fi
 
     dump_state "$session"
     tmux refresh-client -S 2>/dev/null
 }
 
 # ------------------------------------------------------------------ tmux menu
+
+# Parked windows that belong to a session: its own in-place parks, then the ones
+# it sent to the paused session. From inside the paused session: all of those.
+# Rows: index, id, name, kind, at, note, origin.
+parked_rows() {
+    local session="$1" dest fmt
+    dest=$(paused_session)
+    fmt="#{window_index}${SEP}#{window_id}${SEP}#{window_name}${SEP}#{@park}${SEP}#{@park-at}${SEP}#{@park-note}${SEP}#{@park-origin}"
+
+    tmux list-windows -t "=$session" -F "$fmt" 2>/dev/null | awk -F"$SEP" '$4 != ""'
+    [ "$session" = "$dest" ] && return 0
+    tmux has-session -t "=$dest" 2>/dev/null || return 0
+    tmux list-windows -t "=$dest" -F "$fmt" 2>/dev/null \
+        | awk -F"$SEP" -v o="$session" '$4 != "" && $7 == o'
+}
+
+# The slot column: the tab index for a window parked in place, and for one in
+# the paused session the session it came from, or a bare marker when that is
+# the session you are listing from.
+slot() {
+    local idx="$1" origin="$2" session="$3"
+    if [ -z "$origin" ]; then
+        printf '%s' "$idx"
+    elif [ "$session" = "$(paused_session)" ]; then
+        printf '%s' "$origin"
+    else
+        printf '·'
+    fi
+}
+
+# Looking at a window that lives in another session means switching the client
+# there; select-window alone changes that session's current window unseen.
+jump_cmd() {
+    local id="$1" sess
+    sess=$(tmux display-message -p -t "$id" '#{session_name}' 2>/dev/null)
+    printf 'switch-client -t =%s ; select-window -t %s' "$sess" "$id"
+}
+
+jump() {
+    local id="$1" sess
+    sess=$(tmux display-message -p -t "$id" '#{session_name}' 2>/dev/null)
+    tmux switch-client -t "=$sess" \; select-window -t "$id" 2>/dev/null
+}
 
 # The primary picker. Native display-menu rather than fzf in a popup: tmux draws
 # the menu and consumes the keystrokes itself, so nothing the terminal emits —
@@ -386,12 +686,10 @@ menu_items() {
     t=$(now)
 
     local rows
-    rows=$(tmux list-windows -t "$session" \
-        -F "#{window_index}${SEP}#{window_id}${SEP}#{window_name}${SEP}#{@park}${SEP}#{@park-at}${SEP}#{@park-note}" 2>/dev/null \
-        | awk -F"$SEP" '$4 != ""')
+    rows=$(parked_rows "$session")
     [ -n "$rows" ] || return 0
 
-    while IFS="$SEP" read -r idx id name kind at note; do
+    while IFS="$SEP" read -r idx id name kind at note origin; do
         local glyph age label key cmd
         [ "$kind" = "auto" ] && glyph="◌" || glyph="⏸"
         age=$(human_age $(( t - ${at:-$t} )))
@@ -402,12 +700,12 @@ menu_items() {
         note=${note//\"/}
         note=${note//\#/}
 
-        label=$(printf '%s %-3s %-22s %6s  %s' "$glyph" "$idx" "$name" "$age" "$note")
+        label=$(printf '%s %-3s %-22s %6s  %s' "$glyph" "$(slot "$idx" "$origin" "$session")" "$name" "$age" "$note")
         key=${PARK_MENU_KEYS:$n:1}
         [ -n "$key" ] || key=""
 
         case "$action" in
-            jump)   cmd="select-window -t $id" ;;
+            jump)   cmd=$(jump_cmd "$id") ;;
             unpark) cmd="run-shell \"$SELF unpark '$session' '$id'\"" ;;
         esac
 
@@ -457,6 +755,13 @@ menu() {
 unpark_all() {
     local session="$1"
 
+    # Windows this session sent away come back first, each through the full
+    # unpark: moved home, conversation resumed.
+    local id origin
+    while IFS="$SEP" read -r _ id _ _ _ _ origin; do
+        [ -n "$origin" ] && unpark_back "$id"
+    done < <(parked_rows "$session")
+
     while IFS= read -r id; do
         [ -n "$id" ] || continue
         set_opt @park "$id" ""
@@ -499,9 +804,7 @@ picker() {
     t=$(now)
 
     local rows
-    rows=$(tmux list-windows -t "$session" \
-        -F "#{window_index}${SEP}#{window_id}${SEP}#{window_name}${SEP}#{@park}${SEP}#{@park-at}${SEP}#{@park-note}" 2>/dev/null \
-        | awk -F"$SEP" '$4 != ""')
+    rows=$(parked_rows "$session")
 
     if [ -z "$rows" ]; then
         printf 'No parked windows in %s.' "$session"
@@ -510,11 +813,11 @@ picker() {
     fi
 
     local lines=""
-    while IFS="$SEP" read -r idx id name kind at note; do
+    while IFS="$SEP" read -r idx id name kind at note origin; do
         local glyph age
         [ "$kind" = "auto" ] && glyph="◌" || glyph="⏸"
         age=$(human_age $(( t - ${at:-$t} )))
-        lines+=$(printf '%s\t%s %-3s %-24s %-7s %s' "$id" "$glyph" "$idx" "$name" "$age" "${note:-}")
+        lines+=$(printf '%s\t%s %-3s %-24s %-7s %s' "$id" "$glyph" "$(slot "$idx" "$origin" "$session")" "$name" "$age" "${note:-}")
         lines+=$'\n'
     done <<<"$rows"
 
@@ -558,8 +861,8 @@ picker() {
 
     case "$key" in
         ctrl-u) unpark "$session" "$id" ;;
-        ctrl-o) unpark "$session" "$id"; tmux select-window -t "$id" 2>/dev/null ;;
-        *)      tmux select-window -t "$id" 2>/dev/null ;;
+        ctrl-o) unpark "$session" "$id"; jump "$id" ;;
+        *)      jump "$id" ;;
     esac
 }
 
@@ -569,7 +872,7 @@ list() {
     t=$(now)
 
     local fmt
-    fmt="#{session_name}${SEP}#{window_index}${SEP}#{window_name}${SEP}#{@park}${SEP}#{@park-at}${SEP}#{@park-note}"
+    fmt="#{session_name}${SEP}#{window_index}${SEP}#{window_name}${SEP}#{@park}${SEP}#{@park-at}${SEP}#{@park-note}${SEP}#{@park-origin}"
 
     local rows
     if [ -n "$session" ]; then
@@ -578,11 +881,28 @@ list() {
         rows=$(tmux list-windows -a -F "$fmt" 2>/dev/null)
     fi
 
-    while IFS="$SEP" read -r sess idx name kind at note; do
+    while IFS="$SEP" read -r sess idx name kind at note origin; do
         [ -n "${kind:-}" ] || continue
-        printf '%-14s %-3s %-24s %-6s %-8s %s\n' \
-            "$sess" "$idx" "$name" "$kind" "$(human_age $(( t - ${at:-$t} )))" "${note:-}"
+        printf '%-14s %-3s %-24s %-6s %-10s %-8s %s\n' \
+            "$sess" "$idx" "$name" "$kind" "${origin:--}" "$(human_age $(( t - ${at:-$t} )))" "${note:-}"
     done <<<"$rows"
+}
+
+# One-off for windows hand-parked before parking moved them: send each to the
+# paused session as a fresh park would, keeping its age and note. Oldest park
+# first, so the paused session keeps their order.
+migrate() {
+    local dest sess id at note
+    dest=$(paused_session)
+
+    while IFS="$SEP" read -r sess id at note; do
+        [ "$sess" = "$dest" ] && continue
+        park_away "$sess" "$id" "$note"
+        [ -n "$at" ] && [ "$(opt @park-origin "$id")" = "$sess" ] && set_opt @park-at "$id" "$at"
+    done < <(tmux list-windows -a \
+        -F "#{@park-seq}${SEP}#{session_name}${SEP}#{window_id}${SEP}#{@park}${SEP}#{@park-origin}${SEP}#{@park-at}${SEP}#{@park-note}" 2>/dev/null \
+        | awk -F"$SEP" -v OFS="$SEP" '$4 == "1" && $5 == "" { print $1, $2, $3, $6, $7 }' \
+        | sort -t"$SEP" -k1,1n | cut -d"$SEP" -f2-)
 }
 
 # ------------------------------------------------------------------ entrypoint
@@ -592,7 +912,7 @@ shift || true
 
 case "$cmd" in
     toggle)  toggle "$@" ;;
-    park)    park "$1" "$2" 1 "${3:-}" ;;
+    park)    park_away "$1" "$2" "${3:-}" ;;
     auto)    park "$1" "$2" auto "" "${3:-}" ;;
     unpark)  unpark "$@" ;;
     touch)   touch_window "$@" ;;
@@ -604,14 +924,16 @@ case "$cmd" in
     list)    list "${1:-}" ;;
     dump)    dump_state "$1" ;;
     restore) restore "$1" ;;
+    migrate) migrate ;;
     *)
         cat >&2 <<EOF
 usage: tmux-park.sh <command> [args]
 
-  toggle  <session> <window-id> [note]   park if active, unpark if parked
-  park    <session> <window-id> [note]   park by hand
+  toggle  <session> <window-id> [note] [client]
+                                         park if active, unpark if parked
+  park    <session> <window-id> [note]   park by hand: stop Claude, move to paused
   auto    <session> <window-id> [at]     park as detected-stale, dated at <at>
-  unpark  <session> <window-id>          clear park state
+  unpark  <session> <window-id>          unpark; a paused window goes home and resumes
   touch   <session> <window-id>          stamp attention, release auto-stale
   note    <session> <window-id> <text>   set/replace the park note
   sort    <session>                      re-order parked windows to the right
@@ -621,6 +943,7 @@ usage: tmux-park.sh <command> [args]
   list    [session]                      plain-text list (all sessions if omitted)
   dump    <session>                      write the on-disk mirror
   restore <session>                      re-apply the mirror, matching by name
+  migrate                                move old in-place hand-parks to paused
 EOF
         exit 2
         ;;

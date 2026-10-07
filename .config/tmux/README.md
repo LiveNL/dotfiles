@@ -18,12 +18,14 @@ options instead, exactly like the `@claude-state` indicators:
 | `@park-note` | optional "why", shown in the menu |
 | `@park-touch` | epoch seconds it last had your attention |
 | `@park-never` | set to `1` to exempt a window from auto-parking |
+| `@park-origin` | session a hand-parked window was moved out of |
+| `@park-resume` | pane option: Claude session to resume on unpark, `-` for a fresh one |
 
 ## Keys
 
 | Key | Action |
 | --- | --- |
-| `prefix + P` | toggle park on the current window |
+| `prefix + P` | park the current window to the `paused` session, or bring it back from there |
 | `prefix + N` | prompt for a note, parking the window if needed |
 | `prefix + F` | menu of parked windows — number key jumps, `u` unpark one, `U` unpark all |
 | `prefix + C-f` | same list as an fzf popup, for fuzzy matching a long list |
@@ -35,6 +37,24 @@ the gotchas below for why that matters here.
 
 ## Behaviour
 
+- A hand-park moves the window out of the tab row into the `paused` session
+  (`@park-session`), created on demand and closed by tmux once empty. Any Claude
+  in its panes is stopped with SIGTERM first; the pane's session id goes into
+  `@park-resume`. Other processes in the window keep running.
+- Parking is refused while Claude is mid-turn (`@claude-pane-state` `running`):
+  stopping it then throws the turn away.
+- Unparking (`prefix + P` in `paused`, or the menus) moves the window back to its
+  origin session at its old index, types `claude --resume <id>` into each pane
+  that had one, and takes along any client that was looking at it.
+- The menus list a session's own auto-parks plus the windows it sent to
+  `paused`; from inside `paused` they list everything there, with its origin.
+- Dwelling in a window inside `paused` never unparks it: browsing is not resuming.
+- Auto-parks stay in place. They release themselves when the window's output
+  changes, which a stopped Claude would never do.
+- `tmux-park.sh migrate` moves in-place hand-parks from before this to `paused`.
+- A snapshot restore brings `paused` windows back stopped, with origin and
+  resume ids intact.
+
 - The bar sorts into three bands: active windows keep their relative order at the
   low indices, then auto-stale, then hand-parked. Each parked band is oldest park
   first.
@@ -44,9 +64,11 @@ the gotchas below for why that matters here.
   you select the window. Rust rather than amber on purpose: amber is the Claude
   needs-input colour, and a shared hue made the two hard to tell apart. The three
   inactive states are separated by hue *and* lightness, not lightness alone.
-- A hand-park releases once you work in it: 30s of dwell after a fresh visit, or
-  submitting a Claude prompt there. Peeking (<30s) does not reshuffle the bar,
-  and background output alone never clears a hand-park.
+- An in-place park releases once you work in it: 30s of dwell after a fresh
+  visit, or submitting a Claude prompt there. Peeking (<30s) does not reshuffle
+  the bar, and background output alone never clears it. A prompt submitted in a
+  Claude you started by hand inside `paused` unparks that window, and you go
+  along with it.
 - Unparking returns the window to the index it was parked from, not the end of the active block.
 - Re-ordering pins the active window, so sorting never moves your focus.
 - Parking is silent on purpose — `message-style` here is a light background, so a

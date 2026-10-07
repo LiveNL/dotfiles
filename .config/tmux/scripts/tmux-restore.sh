@@ -376,8 +376,14 @@ restore_window() {
     first_sid=$(head -1 <<<"$rows" | awk -F"$SEP" '{ print $11 }')
     layout=$(head -1 <<<"$rows" | awk -F"$SEP" '{ print $12 }')
 
+    # A window parked away to the paused session had its Claude stopped on
+    # purpose. It comes back stopped, still knowing where it belongs and what to
+    # resume when it is unparked.
+    local origin
+    origin=$(head -1 <<<"$rows" | awk -F"$SEP" '{ print $13 }')
+
     cmd=""
-    if [ -n "$run" ] && [ -n "$first_sid" ] && has_transcript "$first_sid"; then
+    if [ -n "$run" ] && [ -z "$origin" ] && [ -n "$first_sid" ] && has_transcript "$first_sid"; then
         cmd=$(resume_command "$first_sid")
     fi
 
@@ -402,12 +408,12 @@ restore_window() {
     fi
 
     local n=0
-    while IFS="$SEP" read -r _ _ _ _ _ _ _ _ cwd _ sid _; do
+    while IFS="$SEP" read -r _ _ _ _ _ _ _ _ cwd _ sid _ _ parked _; do
         [ -n "${cwd:-}" ] || continue
         n=$(( n + 1 ))
 
         local resume=""
-        if [ -n "${sid:-}" ] && has_transcript "$sid"; then
+        if [ -z "$origin" ] && [ -n "${sid:-}" ] && has_transcript "$sid"; then
             resume=1
         fi
 
@@ -425,6 +431,8 @@ restore_window() {
         else
             pid=$(tmux split-window -d -P -F '#{pane_id}' -t "$wid" -c "$cwd" 2>/dev/null)
         fi
+
+        [ -n "${parked:-}" ] && [ -n "$pid" ] && tmux set-option -p -t "$pid" @park-resume "$parked" 2>/dev/null
 
         # Only the typed path is left to do here: the running path was handled
         # at creation.
@@ -447,6 +455,7 @@ restore_window() {
         tmux set-option -w -t "$wid" @park "$park" 2>/dev/null
         tmux set-option -w -t "$wid" @park-at "$(date +%s)" 2>/dev/null
         tmux set-option -w -t "$wid" @park-note "${note:-}" 2>/dev/null
+        [ -n "$origin" ] && tmux set-option -w -t "$wid" @park-origin "$origin" 2>/dev/null
     fi
 }
 

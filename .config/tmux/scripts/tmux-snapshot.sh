@@ -39,7 +39,7 @@ SEP=$'\037'
 
 # Pane rows, not window rows: splits are part of the layout, and the Claude
 # session id is a pane option. Window-level options resolve fine from a pane.
-FIELDS="#{session_name}${SEP}#{window_index}${SEP}#{window_name}${SEP}#{window_active}${SEP}#{@park}${SEP}#{@park-note}${SEP}#{pane_index}${SEP}#{pane_active}${SEP}#{pane_current_path}${SEP}#{pane_current_command}${SEP}#{@claude-session}${SEP}#{window_layout}"
+FIELDS="#{session_name}${SEP}#{window_index}${SEP}#{window_name}${SEP}#{window_active}${SEP}#{@park}${SEP}#{@park-note}${SEP}#{pane_index}${SEP}#{pane_active}${SEP}#{pane_current_path}${SEP}#{pane_current_command}${SEP}#{@claude-session}${SEP}#{window_layout}${SEP}#{@park-origin}${SEP}#{@park-resume}"
 
 gopt() {
     local val
