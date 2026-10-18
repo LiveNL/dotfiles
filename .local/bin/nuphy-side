@@ -1,0 +1,88 @@
+#!/Users/livenl/.local/share/uv/tools/nuphykit/bin/python
+"""Light the NuPhy Air100 V3 side light while something runs, then restore it.
+
+    nuphy-side start 0,80,255       static blue at full brightness, right away
+    nuphy-side end                  back to whatever the side light did before
+                                    start (off, the battery colour)
+
+The side light has no RAM table like the keys: it lives in the Mac lighting record
+(0xD6) as effect (byte 9), brightness (10) and colour (14-16), and the keyboard
+keeps that record in flash. Every start and end is one write each, so it is meant
+for a few presses a day. Mac mode and USB cable only.
+"""
+#?tool nuphy  light the NuPhy side light while something runs, then restore it
+import os
+import sys
+#? nuphy:"yellow key"  toggle iPad Sidecar, side light blue while connecting, magenta while disconnecting (Karabiner)
+import time
+#? nuphy:"orange key"  sleep the Mac (Karabiner)
+from nuphykit import lighting
+from nuphykit.device import Device
+
+MAC = 0
+SIDE = slice(9, 17)        # effect, brightness, three unmapped bytes, colour
+STATIC = 0x02
+FULL = 0x64
+
+# Held from start to end. A second start in between would save the flash colour
+# as the one to restore, so it is skipped; nuphy-battery waits for the lock. A
+# lock older than a minute is from a run that died before its end.
+LOCK = "/tmp/nuphy-side.lock"
+
+# The side light bytes from before start. A died run leaves it behind, and the
+# next start keeps it, since what the keyboard shows then is the flash colour.
+SAVED = "/tmp/nuphy-side.saved"
+
+
+def write_side(rgb=None, side=None):
+    """Light the side light static rgb at full brightness, or put back side."""
+    with Device() as dev:
+        rec = bytearray(lighting.get(dev, MAC))
+        old = bytes(rec[SIDE])
+        if side:
+            rec[SIDE] = side
+        else:
+            rec[9], rec[10], rec[14:17] = STATIC, FULL, bytes(rgb)
+        lighting.set(dev, bytes(rec), MAC)
+    return old
+
+
+def start(rgb):
+    if os.path.isdir(LOCK) and time.time() - os.path.getmtime(LOCK) > 60:
+        os.rmdir(LOCK)
+    try:
+        os.mkdir(LOCK)
+    except FileExistsError:
+        sys.exit(0)
+
+    try:
+        old = write_side(rgb)
+    except Exception:
+        os.rmdir(LOCK)
+        raise
+    if not os.path.exists(SAVED):
+        with open(SAVED, "wb") as f:
+            f.write(old)
+
+
+def end():
+    if not os.path.exists(SAVED):
+        return
+
+    try:
+        with open(SAVED, "rb") as f:
+            write_side(side=f.read())
+        os.remove(SAVED)
+    finally:
+        if os.path.isdir(LOCK):
+            os.rmdir(LOCK)
+
+
+args = sys.argv[1:]
+
+if len(args) == 2 and args[0] == "start":
+    start(tuple(int(x) for x in args[1].split(",")))
+elif args == ["end"]:
+    end()
+else:
+    sys.exit("usage: nuphy-side start R,G,B | end")

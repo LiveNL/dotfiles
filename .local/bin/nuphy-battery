@@ -1,0 +1,91 @@
+#!/Users/livenl/.local/share/uv/tools/nuphykit/bin/python
+"""Show the MacBook battery as the NuPhy Air100 V3 side light colour.
+
+    nuphy-battery toggle     side light on in the battery colour, or off again
+    nuphy-battery refresh    rewrite the colour if the battery crossed a level
+
+Green from 50%, orange from 20%, red below. The side light lives in the Mac
+lighting record (0xD6), which the keyboard keeps in flash, so refresh (launchd,
+every 5 minutes) only writes when the colour changes. Mac mode and USB cable only.
+"""
+#?tool nuphy  show the MacBook battery as the side light colour
+import os
+import re
+#? nuphy:"end key"  side light shows the MacBook battery, press again for off (Karabiner)
+import subprocess
+import sys
+import time
+
+from nuphykit import lighting
+from nuphykit.device import Device, NuPhyError
+
+MAC = 0
+STATIC, FULL, OFF = 0x02, 0x64, 0x00
+COLOURS = {"green": (0, 255, 0), "orange": (255, 120, 0), "red": (255, 0, 0)}
+
+# Exists while the battery colour is on, and holds the colour last written.
+STATE = os.path.expanduser("~/.local/state/nuphy-battery")
+
+# Shared with nuphy-side: a flash puts back the side light it found when it
+# started, so a write in the middle of one would be undone. Wait for it (up to
+# 20 s, since a Sidecar connect holds it that long) instead.
+LOCK = "/tmp/nuphy-side.lock"
+
+
+def level():
+    out = subprocess.run(["/usr/bin/pmset", "-g", "batt"], capture_output=True, text=True).stdout
+    percent = int(re.search(r"(\d+)%", out).group(1))
+    return "green" if percent >= 50 else "orange" if percent >= 20 else "red"
+
+
+def write_side(brightness, rgb=None):
+    for _ in range(200):
+        try:
+            os.mkdir(LOCK)
+            break
+        except FileExistsError:
+            time.sleep(0.1)
+    else:
+        sys.exit("nuphy-battery: a side light flash is still running")
+
+    try:
+        with Device() as dev:
+            rec = bytearray(lighting.get(dev, MAC))
+            rec[10] = brightness
+            if rgb:
+                rec[9], rec[14:17] = STATIC, bytes(rgb)
+            lighting.set(dev, bytes(rec), MAC)
+    finally:
+        os.rmdir(LOCK)
+
+
+def turn_on(colour):
+    write_side(FULL, COLOURS[colour])
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    with open(STATE, "w") as f:
+        f.write(colour)
+
+
+on = os.path.exists(STATE)
+
+if sys.argv[1:] == ["toggle"]:
+    if on:
+        write_side(OFF)
+        os.remove(STATE)
+    else:
+        turn_on(level())
+
+elif sys.argv[1:] == ["refresh"]:
+    if not on:
+        sys.exit(0)
+    colour = level()
+    if open(STATE).read() == colour:
+        sys.exit(0)
+    # Off the cable the keyboard is out of reach; the next run tries again.
+    try:
+        turn_on(colour)
+    except NuPhyError:
+        sys.exit(0)
+
+else:
+    sys.exit("usage: nuphy-battery toggle|refresh")

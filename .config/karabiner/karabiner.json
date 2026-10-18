@@ -229,6 +229,59 @@
                                 "type": "basic"
                             }
                         ]
+                    },
+                    {
+                        "description": "NuPhy Air100 V3 — yellow (page_up) toggles iPad Sidecar, orange (page_down) sleeps the Mac, end toggles the MacBook battery colour on the side light",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 4141,
+                                                "vendor_id": 6645
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": { "key_code": "page_up" },
+                                "to": [{ "shell_command": "'/Users/livenl/Applications/iPad Connect.app/Contents/MacOS/run'" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 4141,
+                                                "vendor_id": 6645
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": { "key_code": "page_down" },
+                                "to": [{ "shell_command": "/usr/bin/pmset sleepnow" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 4141,
+                                                "vendor_id": 6645
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": { "key_code": "end" },
+                                "to": [{ "shell_command": "/Users/livenl/.local/bin/nuphy-battery toggle" }],
+                                "type": "basic"
+                            }
+                        ]
                     }
                 ]
             },
