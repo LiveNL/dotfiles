@@ -13,7 +13,9 @@ import os
 import re
 #? nuphy:"end key"  side light shows the MacBook battery, press again for off (Karabiner)
 import subprocess
+#? nuphy:"knob press"  knob turns switch volume -> zoom -> brightness, a HUD shows the mode (Karabiner)
 import sys
+#? nuphy:"fn + knob press"  delete
 import time
 
 from nuphykit import lighting
